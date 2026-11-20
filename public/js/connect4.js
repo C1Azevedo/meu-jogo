@@ -9,15 +9,9 @@
   }
 
   UI.views.connect4 = {
+    // Ilustração original do cartão na tela inicial
     icon:
-      '<svg class="icon" viewBox="0 0 100 100" aria-hidden="true">' +
-      '<rect x="6" y="14" width="88" height="76" rx="12" fill="var(--c4-board)"/>' +
-      [0, 1, 2, 3].map((r) => [0, 1, 2, 3].map((c) => {
-        const filled = { '3,0': 0, '3,1': 1, '2,1': 0, '3,2': 0, '2,2': 1, '1,2': 0, '3,3': 1 }[`${r},${c}`];
-        const cls = filled === undefined ? 'fill="var(--c4-hole)"' : `class="c4-fill-${filled}"`;
-        return `<circle cx="${20 + c * 20}" cy="${28 + r * 18}" r="7" ${cls}/>`;
-      }).join('')).join('') +
-      '</svg>',
+      '<svg class="icon" viewBox="0 0 160 120" aria-hidden="true"><rect x="24" y="14" width="112" height="94" rx="12" fill="var(--c4-board)" stroke="var(--c4-board-edge)" stroke-width="3"/><circle cx="37.5" cy="27" r="6.5" fill="var(--c4-hole)"/><circle cx="54.5" cy="27" r="6.5" fill="var(--c4-hole)"/><circle cx="71.5" cy="27" r="6.5" fill="var(--c4-hole)"/><circle cx="88.5" cy="27" r="6.5" fill="var(--c4-hole)"/><circle cx="105.5" cy="27" r="6.5" fill="var(--c4-hole)"/><circle cx="122.5" cy="27" r="6.5" fill="var(--c4-hole)"/><circle cx="37.5" cy="44" r="6.5" fill="var(--c4-hole)"/><circle cx="54.5" cy="44" r="6.5" fill="var(--c4-hole)"/><circle cx="71.5" cy="44" r="6.5" fill="var(--c4-hole)"/><circle cx="88.5" cy="44" r="6.5" fill="var(--c4-hole)"/><circle cx="105.5" cy="44" r="6.5" fill="var(--c4-red)" stroke="var(--white)" stroke-width="2"/><circle cx="122.5" cy="44" r="6.5" fill="var(--c4-hole)"/><circle cx="37.5" cy="61" r="6.5" fill="var(--c4-hole)"/><circle cx="54.5" cy="61" r="6.5" fill="var(--c4-hole)"/><circle cx="71.5" cy="61" r="6.5" fill="var(--c4-hole)"/><circle cx="88.5" cy="61" r="6.5" fill="var(--c4-red)" stroke="var(--white)" stroke-width="2"/><circle cx="105.5" cy="61" r="6.5" fill="var(--c4-yellow)"/><circle cx="122.5" cy="61" r="6.5" fill="var(--c4-hole)"/><circle cx="37.5" cy="78" r="6.5" fill="var(--c4-hole)"/><circle cx="54.5" cy="78" r="6.5" fill="var(--c4-yellow)"/><circle cx="71.5" cy="78" r="6.5" fill="var(--c4-red)" stroke="var(--white)" stroke-width="2"/><circle cx="88.5" cy="78" r="6.5" fill="var(--c4-yellow)"/><circle cx="105.5" cy="78" r="6.5" fill="var(--c4-yellow)"/><circle cx="122.5" cy="78" r="6.5" fill="var(--c4-hole)"/><circle cx="37.5" cy="95" r="6.5" fill="var(--c4-yellow)"/><circle cx="54.5" cy="95" r="6.5" fill="var(--c4-red)" stroke="var(--white)" stroke-width="2"/><circle cx="71.5" cy="95" r="6.5" fill="var(--c4-yellow)"/><circle cx="88.5" cy="95" r="6.5" fill="var(--c4-yellow)"/><circle cx="105.5" cy="95" r="6.5" fill="var(--c4-red)"/><circle cx="122.5" cy="95" r="6.5" fill="var(--c4-hole)"/><circle cx="122" cy="8" r="6.5" fill="var(--c4-red)"/></svg>',
     description: 'Solte as peças e alinhe 4 em qualquer direção.',
 
     badge(seat) {

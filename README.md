@@ -5,6 +5,7 @@ Jogo da Velha, Ligue 4, Damas, Xadrez e Campo Minado no navegador: contra o comp
 - **Servidor:** Node.js, Express e Socket.IO
 - **Front-end:** HTML, CSS e JavaScript puro (sem framework, sem etapa de build)
 - **Responsivo:** feito para funcionar bem no celular
+- **Visual:** tema neon "Miami anos 80", com ilustrações e cenário originais em SVG/CSS
 
 ## Rodar localmente
 
@@ -110,6 +111,20 @@ A IA joga de forma justa: ela só enxerga o mesmo que você (as casas abertas), 
 
 Tabuleiro de 6×7. Vence quem alinhar 4 peças na horizontal, na vertical ou em qualquer uma das diagonais. Com o tabuleiro cheio e ninguém alinhado, dá empate.
 
+## Visual
+
+O tema é inspirado na estética neon de Miami nos anos 80 (pôr do sol tropical, palmeiras, skyline e brilho de fliperama). Todas as ilustrações são originais, feitas em SVG e CSS; não há imagens nem marcas de terceiros.
+
+- **Tokens de design:** todas as cores (rosa neon `#FF1493`, magenta `#D900FF`, roxo profundo `#18082E`, roxo `#32105C`, turquesa `#00E5E5`, laranja `#FF8C42`, dourado `#FFD166`), gradientes, brilhos, fontes e as cores dos tabuleiros ficam em `public/css/tokens.css`. Para ajustar o tema, basta mexer nesse arquivo.
+- **Fontes locais:** Anton (títulos) e Inter (textos) ficam em `public/fonts/`, com licença SIL OFL. Nada vem de CDN, então os jogos contra o computador funcionam sem internet (o app está pronto para virar PWA).
+- **Cenário:** céu de pôr do sol, sol retrô com faixas, skyline com janelas neon, água com reflexo e palmeiras, tudo num SVG leve dentro do `index.html`. Nas telas de partida o cenário fica coberto por um véu escuro, para nunca competir com o tabuleiro.
+- **Legibilidade dos tabuleiros:** o brilho neon fica só na moldura; as casas são opacas e de alto contraste. No Xadrez, as casas são rosa claro e lilás, as peças brancas têm contorno escuro e as pretas têm uma borda clara.
+- **Layout:**
+  - Celular: cartões horizontais e tabuleiro na largura toda.
+  - Notebook, desktop e tablet deitado: placar e status numa coluna lateral, com o tabuleiro grande ao lado e limitado pela altura da tela, para caber inteiro.
+  - Telas de toque: casas do Campo Minado com pelo menos 26 px.
+- **Animações:** são sutis (entrada das telas e dos cartões, brilho pulsante, elevação no hover, pulso do placar, do turno e do xeque). Com `prefers-reduced-motion` ativado, todas são desligadas.
+
 ## Organização do código
 
 ```
@@ -122,8 +137,11 @@ games/                Lógica pura dos jogos e da IA, compartilhada entre servid
   chess.js              Regras do Xadrez
   ai.js                 IA: minimax com poda alfa-beta e IA de dedução do Campo Minado
 public/               Front-end estático
-  index.html            As três telas (início, modo e jogo)
-  css/style.css         Estilos (inclui tema escuro automático)
+  index.html            As três telas (início, modo e jogo) e o cenário em SVG
+  css/tokens.css        Tokens de design: cores, gradientes, brilhos e @font-face
+  css/style.css         Base, cenário, tela inicial e componentes compartilhados
+  css/games.css         Tabuleiros e peças de cada jogo
+  fonts/                Anton e Inter (woff2) e suas licenças OFL
   js/app.js             Navegação, modo contra o computador, modo online e placar
   js/tictactoe.js       Interface do Jogo da Velha
   js/connect4.js        Interface do Ligue 4

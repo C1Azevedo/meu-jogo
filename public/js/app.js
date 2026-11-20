@@ -16,7 +16,7 @@
 
   const Games = window.Games;
   const UI = window.UI;
-  const GAME_ORDER = ['tictactoe', 'connect4', 'checkers', 'minesweeper', 'chess'].filter((id) => Games[id] && UI.views[id]);
+  const GAME_ORDER = ['tictactoe', 'connect4', 'checkers', 'chess', 'minesweeper'].filter((id) => Games[id] && UI.views[id]);
   const CPU_DELAY_MS = 450;
   const DIFFICULTY_LABEL = { easy: 'Fácil', medium: 'Médio', hard: 'Difícil' };
 
@@ -35,6 +35,10 @@
     cpuHint: $('#cpu-hint'),
     btnPlayCpu: $('#btn-play-cpu'),
     btnCreateRoom: $('#btn-create-room'),
+    btnOnlineToggle: $('#btn-online-toggle'),
+    onlineBody: $('#online-body'),
+    codeHint: $('#code-hint'),
+    scoreboard: document.querySelector('.scoreboard'),
     joinForm: $('#join-form'),
     joinCode: $('#join-code'),
     onlineActions: $('#online-actions'),
@@ -92,6 +96,7 @@
 
   function showScreen(name, { push = true } = {}) {
     currentScreen = name;
+    document.body.dataset.screen = name; // o CSS escurece o cenário nas telas de partida
     for (const [key, node] of Object.entries(el.screens)) node.classList.toggle('active', key === name);
     window.scrollTo(0, 0);
     if (push) history.pushState({ screen: name }, '');
@@ -109,15 +114,22 @@
 
   function renderHome() {
     el.gameList.innerHTML = '';
-    for (const id of GAME_ORDER) {
+    GAME_ORDER.forEach((id, i) => {
       const view = UI.views[id];
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'game-card';
-      card.innerHTML = `${view.icon}<h3>${Games[id].name}</h3><p>${view.description}</p>`;
+      card.dataset.game = id;
+      card.style.setProperty('--i', i); // atraso da animação de entrada
+      card.setAttribute('aria-label', `Jogar ${Games[id].name}`);
+      card.innerHTML =
+        `<span class="game-card-art">${view.icon}</span>` +
+        `<span class="game-card-body"><span class="game-card-title">${Games[id].name}</span>` +
+        `<span class="game-card-desc">${view.description}</span></span>` +
+        '<span class="game-card-play" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 2l10 6-10 6z"/></svg>Jogar</span>';
       card.addEventListener('click', () => openMode(id));
       el.gameList.appendChild(card);
-    }
+    });
   }
 
   function openMode(gameId) {
@@ -147,6 +159,7 @@
     // Campo Minado tem "desafio solo" além de "contra a CPU"
     el.cpuTypeField.hidden = game.ai.kind !== 'minesweeper';
     resetOnlinePanel();
+    setOnlineOpen(false);
     renderModeOptions();
     showScreen('mode');
   }
@@ -167,7 +180,7 @@
     });
     const solo = selectedGameId && hasSoloMode(selectedGameId);
     el.difficultyField.hidden = !!solo && cpuType === 'solo';
-    el.difficultyLabel.textContent = solo ? 'Dificuldade da CPU:' : 'Escolha a dificuldade:';
+    el.difficultyLabel.textContent = solo ? 'Dificuldade da CPU' : 'Dificuldade';
     el.cpuHint.hidden = !solo;
     el.cpuHint.textContent = cpuType === 'solo'
       ? 'Abra todas as casas sem pisar em minas, contra o relógio.'
@@ -204,12 +217,14 @@
       rematchMine: false,
       rematchTheirs: false,
     };
+    [el.scoreMe, el.scoreDraws, el.scoreOpp].forEach((node) => { node.dataset.ready = ''; });
     session.view = viewDef.create(el.board, { onMove: handleUserMove });
     el.gameTitle.textContent = session.game.name;
     el.meLabel.textContent = solo ? 'Vitórias' : 'Você';
     el.drawsLabel.textContent = solo ? 'Recorde' : 'Empates';
     el.oppLabel.textContent = solo ? 'Derrotas' : mode === 'cpu' ? 'Computador' : 'Adversário';
-    const levelLabel = options && options.level && session.game.LEVELS ? session.game.LEVELS[options.level].label : '';
+    const lv = options && options.level && session.game.LEVELS ? session.game.LEVELS[options.level] : null;
+    const levelLabel = lv ? `${lv.cols}×${lv.rows}` : '';
     if (mode === 'cpu') {
       el.gameSubtitle.textContent = solo ? `Solo · ${levelLabel}` : [DIFFICULTY_LABEL[difficulty], levelLabel].filter(Boolean).join(' · ');
     } else {
@@ -457,7 +472,27 @@
     el.onlineWaiting.hidden = true;
     el.btnCreateRoom.disabled = false;
     el.joinCode.value = '';
+    setCodeState('');
     showOnlineError('');
+  }
+
+  /** Abre/fecha o painel online (botão "Jogar online"). */
+  function setOnlineOpen(open) {
+    el.onlineBody.hidden = !open;
+    el.btnOnlineToggle.setAttribute('aria-expanded', String(open));
+  }
+
+  /** Validação visual do código: '' (neutro), 'valid' (4 letras) ou 'invalid'. */
+  function setCodeState(state, message) {
+    el.joinCode.dataset.state = state;
+    el.joinCode.setAttribute('aria-invalid', String(state === 'invalid'));
+    el.codeHint.textContent = message || (state === 'valid' ? 'Código completo. Toque em Entrar na sala.' : 'Digite as 4 letras do código.');
+    if (state === 'invalid') {
+      // reinicia a animação de "tremida"
+      el.joinCode.classList.remove('shake');
+      void el.joinCode.offsetWidth;
+      el.joinCode.classList.add('shake');
+    }
   }
 
   function cancelWaitingRoom() {
@@ -486,13 +521,13 @@
 
   function joinRoom(rawCode) {
     const code = rawCode.trim().toUpperCase();
-    if (!/^[A-Z]{4}$/.test(code)) return showOnlineError('O código tem 4 letras.');
+    if (!/^[A-Z]{4}$/.test(code)) return setCodeState('invalid', 'O código tem 4 letras.');
     const sock = ensureSocket();
     if (!sock) return;
     showOnlineError('');
     sock.timeout(8000).emit('room:join', { code }, (err, res) => {
       if (err) return showOnlineError('Não foi possível conectar ao servidor.');
-      if (!res.ok) return showOnlineError(res.error);
+      if (!res.ok) return setCodeState('invalid', res.error);
       // A partida começa com o evento 'game:start'.
     });
   }
@@ -526,9 +561,12 @@
     });
     el.board.classList.toggle('disabled', s.ended);
 
-    el.scoreMe.textContent = s.scores.me;
-    el.scoreDraws.textContent = s.solo ? formatTime(s.scores.best) : s.scores.draws;
-    el.scoreOpp.textContent = s.scores.opponent;
+    setScore(el.scoreMe, s.scores.me);
+    setScore(el.scoreDraws, s.solo ? formatTime(s.scores.best) : s.scores.draws);
+    setScore(el.scoreOpp, s.scores.opponent);
+    // Indicador de quem lidera o placar da sessão
+    el.scoreboard.classList.toggle('me-leading', s.scores.me > s.scores.opponent);
+    el.scoreboard.classList.toggle('opp-leading', s.scores.opponent > s.scores.me);
 
     const { text, kind, badgeSeat } = statusInfo(s);
     el.status.className = 'status' + (kind ? ' ' + kind : '');
@@ -548,6 +586,20 @@
       el.btnAgain.disabled = s.rematchMine;
     }
     el.btnBackMenu.hidden = !s.ended;
+  }
+
+  /** Atualiza um número do placar com um "pulso" quando ele muda. */
+  function setScore(node, value) {
+    const text = String(value);
+    if (node.textContent === text) return;
+    const changed = node.textContent !== '' && node.dataset.ready === '1';
+    node.textContent = text;
+    node.dataset.ready = '1';
+    if (changed) {
+      node.classList.remove('bump');
+      void node.offsetWidth;
+      node.classList.add('bump');
+    }
   }
 
   function formatTime(ms) {
@@ -658,6 +710,12 @@
   });
   el.joinCode.addEventListener('input', () => {
     el.joinCode.value = el.joinCode.value.toUpperCase().replace(/[^A-Z]/g, '');
+    setCodeState(el.joinCode.value.length === 4 ? 'valid' : '');
+  });
+  el.btnOnlineToggle.addEventListener('click', () => {
+    const open = el.onlineBody.hidden;
+    setOnlineOpen(open);
+    if (open) el.btnCreateRoom.focus({ preventScroll: true });
   });
   el.btnCancelRoom.addEventListener('click', cancelWaitingRoom);
   el.roomCode.addEventListener('click', () => {

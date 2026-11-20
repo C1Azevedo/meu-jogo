@@ -7,12 +7,9 @@
   const O_SVG = '<svg viewBox="0 0 100 100" aria-hidden="true"><circle class="mark-o" cx="50" cy="50" r="28"/></svg>';
 
   UI.views.tictactoe = {
+    // Ilustração original do cartão na tela inicial
     icon:
-      '<svg class="icon" viewBox="0 0 100 100" aria-hidden="true">' +
-      '<path d="M37 12v76M63 12v76M12 37h76M12 63h76" stroke="currentColor" stroke-opacity=".25" stroke-width="5" stroke-linecap="round"/>' +
-      '<path class="mark-x" style="stroke-width:7" d="M16 16l14 14M30 16L16 30"/>' +
-      '<circle class="mark-o" style="stroke-width:6" cx="50" cy="50" r="8"/>' +
-      '<path class="mark-x" style="stroke-width:7" d="M70 70l14 14M84 70L70 84"/></svg>',
+      '<svg class="icon" viewBox="0 0 160 120" aria-hidden="true"><path d="M64 14v92M96 14v92M34 44h92M34 76h92" stroke="var(--neon-cyan)" stroke-width="4" stroke-linecap="round"/><path d="M40 20l18 18M58 20l-18 18M71 51l18 18M89 51l-18 18M102 82l18 18M120 82l-18 18" stroke="var(--neon-pink)" stroke-width="7" stroke-linecap="round"/><circle cx="111" cy="29" r="10" fill="none" stroke="var(--neon-cyan)" stroke-width="6"/><circle cx="49" cy="60" r="10" fill="none" stroke="var(--neon-cyan)" stroke-width="6"/><path d="M40 20L120 100" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" opacity=".9"/></svg>',
     description: 'Clássico 3×3: faça uma linha com 3.',
 
     /** Ícone pequeno da peça de cada jogador (usado na barra de status). */

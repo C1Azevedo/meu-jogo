@@ -21,12 +21,9 @@
   }
 
   UI.views.chess = {
+    // Ilustração original do cartão na tela inicial
     icon:
-      '<svg class="icon" viewBox="0 0 100 100" aria-hidden="true">' +
-      '<rect x="8" y="8" width="84" height="84" rx="10" fill="var(--cs-light)"/>' +
-      '<path d="M8 8h21v21H8zM50 8h21v21H50zM29 29h21v21H29zM71 29h21v21H71zM8 50h21v21H8zM50 50h21v21H50zM29 71h21v21H29zM71 71h21v21H71z" fill="var(--cs-dark)"/>' +
-      '<text x="50" y="72" font-size="58" text-anchor="middle" fill="#fafafa" stroke="#222" stroke-width="2.5" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols 2, serif">♞︎</text>' +
-      '</svg>',
+      '<svg class="icon" viewBox="0 0 160 120" aria-hidden="true"><defs><linearGradient id="icon-knight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--neon-pink)"/><stop offset="1" stop-color="var(--magenta)"/></linearGradient></defs><rect x="16" y="96" width="16" height="12" fill="var(--cs-light)"/><rect x="32" y="96" width="16" height="12" fill="var(--cs-dark)"/><rect x="48" y="96" width="16" height="12" fill="var(--cs-light)"/><rect x="64" y="96" width="16" height="12" fill="var(--cs-dark)"/><rect x="80" y="96" width="16" height="12" fill="var(--cs-light)"/><rect x="96" y="96" width="16" height="12" fill="var(--cs-dark)"/><rect x="112" y="96" width="16" height="12" fill="var(--cs-light)"/><rect x="128" y="96" width="16" height="12" fill="var(--cs-dark)"/><path d="M54 94H108V86H102C105 62 102 36 88 22L86 9L78 17C66 19 55 29 49 43C46 50 51 55 58 54C64 53 68 51 73 51C64 61 60 73 62 86H54Z" fill="url(#icon-knight)" stroke="var(--white)" stroke-width="2.5" stroke-linejoin="round"/><circle cx="76" cy="31" r="3.2" fill="var(--deep-purple)"/><path d="M92 26C98 40 100 58 98 78" stroke="var(--pink-soft)" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/></svg>',
     description: 'Regras completas: roque, en passant, promoção e empates.',
 
     badge(seat) {
