@@ -158,3 +158,30 @@ test('Ligue 4 online: servidor valida coluna e detecta vitória', async () => {
   a.close();
   b.close();
 });
+
+test('Damas online: servidor recusa jogadas ilegais e usa as capturas calculadas por ele', async () => {
+  const { a, b, code } = await setupRoom('checkers');
+  // Movimento de pedra para trás / casa inexistente / formato errado
+  for (const bad of [{ from: 40, path: [49] }, { from: 40, path: [99] }, { from: 'x', path: [33] }, 33]) {
+    assert.strictEqual((await emit(a, 'game:move', { move: bad })).ok, false, JSON.stringify(bad));
+  }
+  // Brancas: (5,2)=42 → (4,3)=35 ; Pretas: (2,5)=21 → (3,4)=28 ; agora brancas são obrigadas a capturar.
+  let upd = once(b, 'game:state');
+  assert.ok((await emit(a, 'game:move', { move: { from: 42, path: [35] } })).ok);
+  await upd;
+  upd = once(a, 'game:state');
+  assert.ok((await emit(b, 'game:move', { move: { from: 21, path: [28] } })).ok);
+  await upd;
+  // Tentar ignorar a captura obrigatória
+  assert.strictEqual((await emit(a, 'game:move', { move: { from: 40, path: [33] } })).ok, false);
+  // Mandar "capturas" falsas junto com a jogada certa: o servidor ignora e usa as dele
+  upd = once(b, 'game:state');
+  const res = await emit(a, 'game:move', { move: { from: 35, path: [21], captures: [1, 3, 5, 7] } });
+  assert.ok(res.ok);
+  const { state } = await upd;
+  assert.deepStrictEqual(state.lastMove.captures, [28]);
+  assert.strictEqual(state.board.filter((v) => v < 0).length, 11);
+  assert.strictEqual(rooms.get(code).state.board[1], -1, 'peças não capturadas continuam lá');
+  a.close();
+  b.close();
+});

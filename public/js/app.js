@@ -442,7 +442,9 @@
 
     const names = s.game.playerNames;
     if (state.turn === s.seat) {
-      return { text: s.pending ? 'Enviando jogada…' : `Sua vez (${names[s.seat]})`, kind: 'my-turn', badgeSeat: s.seat };
+      let text = s.pending ? 'Enviando jogada…' : `Sua vez (${names[s.seat]})`;
+      if (!s.pending && s.game.hasCaptures && s.game.hasCaptures(state)) text += ' — captura obrigatória!';
+      return { text, kind: 'my-turn', badgeSeat: s.seat };
     }
     const waitText = mode === 'cpu' ? 'Computador pensando…' : 'Vez do adversário';
     return { text: `${waitText} (${names[1 - s.seat]})`, kind: '', badgeSeat: 1 - s.seat };
