@@ -223,7 +223,8 @@
     el.meLabel.textContent = solo ? 'Vitórias' : 'Você';
     el.drawsLabel.textContent = solo ? 'Recorde' : 'Empates';
     el.oppLabel.textContent = solo ? 'Derrotas' : mode === 'cpu' ? 'Computador' : 'Adversário';
-    const levelLabel = options && options.level && session.game.LEVELS ? session.game.LEVELS[options.level].label : '';
+    const lv = options && options.level && session.game.LEVELS ? session.game.LEVELS[options.level] : null;
+    const levelLabel = lv ? `${lv.cols}×${lv.rows}` : '';
     if (mode === 'cpu') {
       el.gameSubtitle.textContent = solo ? `Solo · ${levelLabel}` : [DIFFICULTY_LABEL[difficulty], levelLabel].filter(Boolean).join(' · ');
     } else {

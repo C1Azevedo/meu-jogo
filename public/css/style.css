@@ -262,6 +262,7 @@ body[data-screen="game"] .scene::after { background: var(--overlay); }
   background: var(--gradient-pink);
   border-color: transparent;
   color: var(--white);
+  text-shadow: 0 1px 2px rgba(24, 8, 46, .55);
   box-shadow: var(--glow-pink);
 }
 .btn-primary:hover, .btn-pink:hover { background: var(--gradient-pink); border-color: transparent; filter: brightness(1.12); box-shadow: 0 0 10px var(--neon-pink), 0 0 34px rgba(255, 20, 147, .7); transform: translateY(-2px); }
@@ -648,6 +649,13 @@ body[data-screen="game"] .scene::after { background: var(--overlay); }
   font-weight: 700;
   box-shadow: var(--glow-pink), var(--shadow);
   z-index: 10;
+}
+
+/* No celular, "Sair da partida" vira só o ícone para o título caber */
+@media (max-width: 520px) {
+  .btn-exit span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .btn-exit { padding: 10px; min-width: 46px; }
+  #screen-game .topbar-title { font-size: 1.6rem; }
 }
 
 @media (max-width: 420px) {

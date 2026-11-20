@@ -147,8 +147,10 @@
     <!-- Tela 3: partida -->
     <section id="screen-game" class="screen" aria-labelledby="game-title">
       <header class="topbar">
-        <button id="btn-menu" class="btn btn-ghost" type="button">← Menu</button>
-        <h2 id="game-title">Jogo</h2>
+        <button id="btn-menu" class="btn btn-ghost btn-exit" type="button">
+          <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5M14 8l-4 4 4 4M10 12h10"/></svg><span>Sair da partida</span>
+        </button>
+        <h2 id="game-title" class="topbar-title neon-title">Jogo</h2>
         <span id="game-subtitle" class="topbar-spacer badge-soft"></span>
       </header>
 
@@ -164,7 +166,7 @@
       <div id="board" class="board-wrap"></div>
 
       <div class="game-actions">
-        <button id="btn-again" class="btn btn-primary" type="button" hidden>Jogar de novo</button>
+        <button id="btn-again" class="btn btn-primary btn-neon" type="button" hidden>Jogar de novo</button>
         <button id="btn-back-menu" class="btn" type="button" hidden>Voltar ao menu</button>
       </div>
     </section>

@@ -77,7 +77,7 @@
   --warning: var(--gold);
   --warning-bg: rgba(255, 209, 102, .14);
   --highlight: var(--neon-cyan);
-  --overlay: rgba(13, 3, 32, .72);
+  --overlay: rgba(13, 3, 32, .86);
   --scrim: rgba(0, 0, 0, .55);
 
   /* Dificuldades */
