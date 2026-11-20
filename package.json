@@ -1,0 +1,22 @@
+{
+  "name": "hub-de-jogos",
+  "version": "1.0.0",
+  "description": "Hub de Jogos: Jogo da Velha, Damas e Ligue 4 contra o computador ou online 1x1.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.1"
+  }
+}
