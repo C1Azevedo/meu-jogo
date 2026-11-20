@@ -12,6 +12,7 @@ importScripts(
   '/games/connect4.js',
   '/games/checkers.js',
   '/games/minesweeper.js',
+  '/games/chess.js',
   '/games/ai.js'
 );
 

@@ -267,3 +267,69 @@ test('Campo Minado online: nível inválido vira fácil', async () => {
   }
   a.close();
 });
+
+test('Xadrez online: cores, validação, trapaças recusadas, xeque-mate e revanche com troca de cores', async () => {
+  const ch = require('../games/chess');
+  const { a, b, code, sa, sb } = await setupRoom('chess');
+  assert.strictEqual(sa.seat, 0, 'quem cria joga de brancas');
+  assert.strictEqual(sb.seat, 1);
+  const mv = (u) => ({ from: ch.parseSquare(u.slice(0, 2)), to: ch.parseSquare(u.slice(2, 4)), promotion: u[4] });
+
+  // Pretas tentando jogar primeiro
+  assert.deepStrictEqual(await emit(b, 'game:move', { move: mv('e7e5') }), { ok: false, error: 'Não é a sua vez.' });
+  // Brancas tentando mover peça preta, lance impossível, formato inválido, campos extras forjados
+  for (const bad of [mv('e7e5'), mv('e2e5'), mv('g1g3'), { from: 'e2', to: 'e4' }, { from: 52, to: 36, promotion: 'k' }, null]) {
+    assert.strictEqual((await emit(a, 'game:move', { move: bad })).ok, false, JSON.stringify(bad));
+  }
+
+  // Mate do louco: f3 e5 g4 Dh4#
+  const seq = [[a, 'f2f3'], [b, 'e7e5'], [a, 'g2g4']];
+  for (const [c, u] of seq) {
+    const upd = once(c === a ? b : a, 'game:state');
+    // Campos forjados (captura falsa, peça trocada) são ignorados: o servidor usa a jogada dele.
+    assert.ok((await emit(c, 'game:move', { move: { ...mv(u), captured: 'Q', piece: 'Q', flag: 'castle' } })).ok, u);
+    const { state } = await upd;
+    assert.strictEqual(state.captured[0].length + state.captured[1].length, 0);
+  }
+  assert.strictEqual(rooms.get(code).state.board[ch.parseSquare('g4')], 'P');
+
+  const endA = once(a, 'game:state');
+  const endB = once(b, 'game:state');
+  assert.ok((await emit(b, 'game:move', { move: mv('d8h4') })).ok);
+  const [fa, fb] = await Promise.all([endA, endB]);
+  assert.strictEqual(fa.state.winner, 1);
+  assert.strictEqual(fa.state.reason, 'checkmate');
+  assert.strictEqual(fa.state.check, true);
+  assert.deepStrictEqual(fb.scores, { me: 1, opponent: 0, draws: 0 });
+  assert.strictEqual((await emit(a, 'game:move', { move: mv('a2a3') })).ok, false, 'nada depois do mate');
+
+  // Revanche: as cores trocam
+  const ra = once(a, 'game:start');
+  const rb = once(b, 'game:start');
+  a.emit('game:rematch');
+  b.emit('game:rematch');
+  const [na, nb] = await Promise.all([ra, rb]);
+  assert.strictEqual(na.seat, 1, 'A agora joga de pretas');
+  assert.strictEqual(nb.seat, 0, 'B agora joga de brancas');
+  assert.strictEqual(nb.state.turn, 0);
+  assert.strictEqual((await emit(a, 'game:move', { move: mv('e7e5') })).ok, false, 'pretas não começam');
+  assert.ok((await emit(b, 'game:move', { move: mv('e2e4') })).ok);
+  a.close();
+  b.close();
+});
+
+test('Xadrez online: promoção exige escolher a peça', async () => {
+  const ch = require('../games/chess');
+  const { a, b, code } = await setupRoom('chess');
+  // Coloca o servidor numa posição com promoção (atalho de teste)
+  rooms.get(code).state = ch.fromFEN('6k1/P7/8/8/8/8/8/6K1 w - - 0 1');
+  const a7 = ch.parseSquare('a7');
+  const a8 = ch.parseSquare('a8');
+  assert.strictEqual((await emit(a, 'game:move', { move: { from: a7, to: a8 } })).ok, false);
+  assert.strictEqual((await emit(a, 'game:move', { move: { from: a7, to: a8, promotion: 'x' } })).ok, false);
+  const upd = once(b, 'game:state');
+  assert.ok((await emit(a, 'game:move', { move: { from: a7, to: a8, promotion: 'n' } })).ok);
+  assert.strictEqual((await upd).state.board[a8], 'N');
+  a.close();
+  b.close();
+});

@@ -18,6 +18,7 @@ const GAMES = {
   connect4: require('./games/connect4'),
   checkers: require('./games/checkers'),
   minesweeper: require('./games/minesweeper'),
+  chess: require('./games/chess'),
 };
 
 const app = express();

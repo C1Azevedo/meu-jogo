@@ -1,6 +1,6 @@
 # Hub de Jogos
 
-Jogo da Velha, Ligue 4, Damas e Campo Minado no navegador: contra o computador (3 dificuldades) ou online 1x1 com um amigo, usando um código de sala.
+Jogo da Velha, Ligue 4, Damas, Xadrez e Campo Minado no navegador: contra o computador (3 dificuldades) ou online 1x1 com um amigo, usando um código de sala.
 
 - **Servidor:** Node.js, Express e Socket.IO
 - **Front-end:** HTML, CSS e JavaScript puro (sem framework, sem etapa de build)
@@ -50,7 +50,13 @@ Se o adversário fechar a página ou cair a conexão, a partida é encerrada e a
 |---------|----------------|
 | Fácil   | Na maioria das vezes joga aleatoriamente. Às vezes aproveita uma vitória imediata, mas não se defende: erra de propósito. |
 | Médio   | Olha 2 lances à frente (3 nas Damas): ganha quando pode e bloqueia as ameaças óbvias. |
-| Difícil | Minimax com poda alfa-beta e aprofundamento iterativo. No Jogo da Velha a busca é completa (não perde nunca). No Ligue 4 e nas Damas a busca vai aprofundando até esgotar o tempo (cerca de 1,5 s). |
+| Difícil | Minimax com poda alfa-beta e aprofundamento iterativo. No Jogo da Velha a busca é completa (não perde nunca). No Ligue 4, nas Damas e no Xadrez a busca vai aprofundando até esgotar o tempo (cerca de 1,5 s). |
+
+No Xadrez:
+
+- **Fácil:** joga quase ao acaso, com erros de propósito.
+- **Médio:** minimax de profundidade 2 que só conta material.
+- **Difícil:** alfa-beta com material e posição das peças (tabelas por casa), mais uma busca de quiescência que continua analisando as capturas no fim da busca. Assim a IA não avalia a posição no meio de uma troca de peças. Em 1,5 s ela chega a 4 ou 5 lances de profundidade.
 
 A IA roda num **Web Worker** (`public/js/ai-worker.js`), fora da thread da interface, então a tela nunca trava enquanto o computador pensa. Se o navegador não suportar Workers, a IA roda na thread principal.
 
@@ -66,6 +72,20 @@ No Campo Minado a IA não usa minimax, e sim dedução (veja abaixo).
 - As peças capturadas só saem do tabuleiro no fim da jogada e não podem ser puladas duas vezes.
 - **Promoção a dama** quando a pedra termina a jogada na última linha. A **dama é voadora**: anda e captura a qualquer distância na diagonal.
 - Perde quem fica sem peças ou sem movimentos. Empate depois de 20 lances seguidos de cada lado só com damas e sem captura.
+
+### Xadrez
+
+Regras completas:
+
+- Todos os movimentos, xeque e xeque-mate. Peça cravada não pode deixar o rei em xeque.
+- **Roque** pequeno e grande. Não vale se o rei estiver em xeque ou passar por casa atacada, e o direito se perde quando o rei ou a torre se movem, ou quando a torre é capturada.
+- **En passant**, só no lance imediatamente seguinte.
+- **Promoção** do peão: aparece uma janela para escolher dama, torre, bispo ou cavalo.
+- **Empates:** afogamento, **repetição tripla**, **regra dos 50 lances** e material insuficiente (por exemplo, rei contra rei). Para simplificar, a repetição tripla e os 50 lances encerram a partida automaticamente, sem precisar reivindicar.
+
+Na tela: o tabuleiro fica virado para quem joga de pretas. Ao tocar numa peça, aparecem as casas possíveis (ponto para casa livre, anel para captura). O último lance fica marcado, o rei em xeque fica em vermelho, a barra de status avisa "Xeque!" e cada lado mostra as peças que capturou e a vantagem de material. No online, quem cria a sala joga de brancas e a revanche troca as cores.
+
+O gerador de jogadas é conferido nos testes com **perft**: a contagem de todas as posições possíveis a partir de posições de referência ("Kiwipete" e outras) bate com os valores conhecidos.
 
 ### Campo Minado
 
@@ -99,6 +119,7 @@ games/                Lógica pura dos jogos e da IA, compartilhada entre servid
   connect4.js           Regras do Ligue 4
   checkers.js           Regras das Damas
   minesweeper.js        Regras do Campo Minado (inclui o estado público, sem as minas)
+  chess.js              Regras do Xadrez
   ai.js                 IA: minimax com poda alfa-beta e IA de dedução do Campo Minado
 public/               Front-end estático
   index.html            As três telas (início, modo e jogo)
@@ -108,6 +129,7 @@ public/               Front-end estático
   js/connect4.js        Interface do Ligue 4
   js/checkers.js        Interface das Damas
   js/minesweeper.js     Interface do Campo Minado
+  js/chess.js           Interface do Xadrez
   js/ai-worker.js       Web Worker que roda a IA fora da thread da interface
 test/                 Testes automatizados (node --test)
 ```
@@ -119,7 +141,8 @@ Ganchos opcionais, usados por jogos que precisam deles:
 - `publicState(state)`: o que pode ser mostrado ao jogador. No Campo Minado, é o estado sem as minas.
 - `onlineOptions(options)`: valida as opções que o cliente manda ao criar a sala (por exemplo, o nível do tabuleiro).
 - `LEVELS`: mostra o seletor de tabuleiro na tela de modo.
-- `resultDetail(state, seat)` e `statusNote(state)`: textos extras na barra de status.
+- `resultDetail(state, seat)` e `statusNote(state)`: textos extras na barra de status (por exemplo, "Xeque!" e o motivo do empate).
+- Em `game.ai`: `mediumEvaluate` (avaliação própria do nível médio) e `quiescence` (busca de quiescência no difícil, usando `noisyMoves`).
 
 **O servidor nunca confia no cliente.** No modo online, o estado da partida fica no servidor. O cliente só manda a jogada que quer fazer. O servidor confere se é a vez daquele jogador e procura a jogada entre as jogadas legais calculadas por ele. Se não encontrar, recusa. Na jogada aceita, ele aplica a versão que ele mesmo calculou (por exemplo, as peças capturadas nas Damas) e envia o novo estado para os dois jogadores.
 

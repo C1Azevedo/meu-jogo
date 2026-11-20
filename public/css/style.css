@@ -39,6 +39,8 @@
   --ms-own1: #ffeedd;
   --ms-p0: #2563eb;
   --ms-p1: #ea7a12;
+  --cs-light: #eeeed2;
+  --cs-dark: #769656;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -68,6 +70,8 @@
     --ms-open: #1a1d28;
     --ms-own0: #1b2a4a;
     --ms-own1: #3b2a18;
+    --cs-light: #d6d6bd;
+    --cs-dark: #5f7d45;
   }
 }
 
@@ -544,6 +548,101 @@ button, input { font: inherit; color: inherit; }
   .ms-cell.n8 { color: #9ca3af; }
 }
 .ms-help { margin: 0; text-align: center; }
+
+/* ---------- Xadrez ---------- */
+
+.cs-wrap { width: min(100%, 520px); display: flex; flex-direction: column; gap: 6px; }
+.cs-side { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 30px; font-size: .9rem; }
+.cs-name { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.cs-name.active { color: var(--text); }
+.cs-name .badge { width: 14px; height: 14px; }
+.cs-captured { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; min-width: 0; }
+.cs-adv { margin-left: 6px; font-weight: 700; color: var(--muted); font-size: .85rem; }
+
+.cs-holder { position: relative; }
+.cs-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.cs-square { position: relative; display: flex; align-items: center; justify-content: center; container-type: size; }
+.cs-square.light { background: var(--cs-light); }
+.cs-square.dark { background: var(--cs-dark); }
+.cs-square.last { box-shadow: inset 0 0 0 100px rgba(255, 221, 0, .38); }
+.cs-square.selected { box-shadow: inset 0 0 0 100px rgba(20, 85, 30, .45); }
+.cs-square.check { background: radial-gradient(circle, #ff3b3b 0%, #e11d1d 35%, rgba(225, 29, 29, 0) 75%), var(--cs-dark); }
+.cs-square.light.check { background: radial-gradient(circle, #ff3b3b 0%, #e11d1d 35%, rgba(225, 29, 29, 0) 75%), var(--cs-light); }
+.cs-board.interactive .cs-square.movable,
+.cs-board.interactive .cs-square.target,
+.cs-board.interactive .cs-square.capture { cursor: pointer; }
+.cs-square.target::after {
+  content: "";
+  position: absolute;
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  background: rgba(20, 60, 20, .35);
+}
+.cs-square.capture::after {
+  content: "";
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  border: 5px solid rgba(20, 60, 20, .35);
+}
+.cs-rank, .cs-file { position: absolute; font-size: 10px; font-weight: 700; opacity: .75; pointer-events: none; }
+.cs-rank { top: 2px; left: 3px; }
+.cs-file { bottom: 1px; right: 3px; }
+.cs-square.light .cs-rank, .cs-square.light .cs-file { color: var(--cs-dark); }
+.cs-square.dark .cs-rank, .cs-square.dark .cs-file { color: var(--cs-light); }
+
+.cs-piece {
+  font-family: "DejaVu Sans", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", serif;
+  font-size: 80cqmin;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+@supports not (font-size: 1cqmin) {
+  .cs-piece { font-size: min(9.5vw, 50px); }
+}
+.cs-piece.w { color: #fafafa; -webkit-text-stroke: 1.5px #2b2b2b; text-shadow: 0 2px 2px rgba(0, 0, 0, .3); }
+.cs-piece.b { color: #262626; -webkit-text-stroke: 1px #000; text-shadow: 0 2px 2px rgba(0, 0, 0, .25); }
+.cs-piece.small { font-size: 18px; margin-left: -3px; -webkit-text-stroke-width: 1px; text-shadow: none; }
+
+.cs-promo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, .55);
+  border-radius: 8px;
+  z-index: 3;
+}
+.cs-promo p { margin: 0; color: #fff; font-weight: 700; }
+.cs-promo-options { display: flex; gap: 8px; }
+.cs-promo-btn {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 12px;
+  background: var(--cs-light);
+  cursor: pointer;
+}
+.cs-promo-btn:hover { background: #fff; }
+.cs-promo-btn .cs-piece { font-size: 46px; }
+.cs-promo .btn-ghost { color: #fff; }
 
 @media (max-width: 420px) {
   .app { padding-left: 12px; padding-right: 12px; }

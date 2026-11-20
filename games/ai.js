@@ -10,6 +10,13 @@
  *   medium — busca rasa (2 lances): ganha quando dá e bloqueia ameaças óbvias.
  *   hard   — Minimax (negamax) com poda alfa-beta e aprofundamento iterativo,
  *            limitado por profundidade e por tempo para nunca travar a tela.
+ *
+ * Opções extras em game.ai (usadas pelo Xadrez):
+ *   mediumEvaluate — função de avaliação própria do nível médio (ex.: só material)
+ *   quiescence     — no difícil, ao chegar na profundidade 0 continua olhando as
+ *                    jogadas "barulhentas" (game.noisyMoves: capturas/promoções)
+ *                    para não avaliar a posição no meio de uma troca de peças.
+ * O Campo Minado (game.ai.kind === 'minesweeper') usa uma IA de dedução própria.
  */
 (function (root, factory) {
   const mod = factory();
@@ -40,9 +47,32 @@
     return state.winner === state.turn ? WIN - ply : -(WIN - ply);
   }
 
+  const MAX_QUIESCENCE_PLIES = 8;
+
+  /** Busca de quiescência: só capturas/promoções, com "stand pat" pela avaliação estática. */
+  function quiesce(game, state, alpha, beta, ply, ctx, qply) {
+    if (state.winner !== null) return terminalScore(state, ply);
+    ctx.nodes++;
+    if (ctx.deadline && (ctx.nodes & 511) === 0 && Date.now() > ctx.deadline) throw TIMEOUT;
+    const standPat = ctx.evaluate(state, state.turn);
+    if (qply >= MAX_QUIESCENCE_PLIES || standPat >= beta) return standPat;
+    if (standPat > alpha) alpha = standPat;
+    let best = standPat;
+    for (const move of game.noisyMoves(state)) {
+      const score = -quiesce(game, game.applyMove(state, move), -beta, -alpha, ply + 1, ctx, qply + 1);
+      if (score > best) best = score;
+      if (score > alpha) alpha = score;
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+
   function negamax(game, state, depth, alpha, beta, ply, ctx) {
     if (state.winner !== null) return terminalScore(state, ply);
-    if (depth === 0) return game.evaluate(state, state.turn);
+    if (depth === 0) {
+      if (ctx.quiescence) return quiesce(game, state, alpha, beta, ply, ctx, 0);
+      return ctx.evaluate(state, state.turn);
+    }
 
     ctx.nodes++;
     if (ctx.deadline && (ctx.nodes & 511) === 0 && Date.now() > ctx.deadline) throw TIMEOUT;
@@ -59,8 +89,8 @@
   }
 
   /** Avalia todas as jogadas da raiz com janela completa (pontuação exata de cada uma). */
-  function scoreAllMoves(game, state, depth, moves) {
-    const ctx = { nodes: 0, deadline: 0 };
+  function scoreAllMoves(game, state, depth, moves, evaluate) {
+    const ctx = { nodes: 0, deadline: 0, evaluate: evaluate || game.evaluate, quiescence: false };
     return moves.map((move) => ({
       move,
       score: -negamax(game, game.applyMove(state, move), depth - 1, -Infinity, Infinity, 1, ctx),
@@ -84,8 +114,9 @@
     if (game.orderMoves) ordered = game.orderMoves(state, ordered);
     let bestMove = ordered[0];
 
+    const quiescence = !!(game.ai.quiescence && game.noisyMoves);
     for (let depth = 1; depth <= maxDepth; depth++) {
-      const ctx = { nodes: 0, deadline };
+      const ctx = { nodes: 0, deadline, evaluate: game.evaluate, quiescence };
       let alpha = -Infinity;
       let iterBest = null;
       let iterBestScore = -Infinity;
@@ -378,7 +409,8 @@
 
     if (difficulty === 'medium') {
       const depth = game.ai.mediumDepth || 2;
-      return pickAmongBest(scoreAllMoves(game, state, depth, moves), game.ai.mediumTolerance || 0, rng);
+      const scored = scoreAllMoves(game, state, depth, moves, game.ai.mediumEvaluate);
+      return pickAmongBest(scored, game.ai.mediumTolerance || 0, rng);
     }
 
     return searchHard(game, state, moves, rng);
