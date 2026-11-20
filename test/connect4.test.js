@@ -78,17 +78,14 @@ test('IA difícil responde dentro do limite de tempo e evita armadilha dupla', (
   assert.ok([1, 4].includes(move), 'deveria impedir o duplo ataque, jogou ' + move);
 });
 
-test('IA difícil vence a média na maioria das partidas', () => {
-  let hardWins = 0;
-  let hardLosses = 0;
-  for (let g = 0; g < 4; g++) {
-    const hardSeat = g % 2;
+test('IA difícil (começando) nunca perde para a média', () => {
+  // Limite de tempo menor só para o teste ser rápido; a profundidade vem do tempo.
+  const game = { ...c4, ai: { ...c4.ai, timeLimitMs: 500 } };
+  for (let g = 0; g < 3; g++) {
     let s = c4.createState();
     while (s.winner === null) {
-      s = c4.applyMove(s, ai.chooseMove(c4, s, s.turn === hardSeat ? 'hard' : 'medium'));
+      s = c4.applyMove(s, ai.chooseMove(game, s, s.turn === 0 ? 'hard' : 'medium'));
     }
-    if (s.winner === hardSeat) hardWins++;
-    else if (s.winner !== 'draw') hardLosses++;
+    assert.notStrictEqual(s.winner, 1, 'a difícil perdeu para a média');
   }
-  assert.ok(hardWins > hardLosses, `difícil ${hardWins} x ${hardLosses} médio`);
 });

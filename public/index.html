@@ -29,15 +29,30 @@
         <span class="topbar-spacer"></span>
       </header>
 
+      <!-- Só para jogos com níveis de tabuleiro (Campo Minado): vale para os dois modos -->
+      <div id="level-field" class="card level-card" hidden>
+        <p class="muted">Tabuleiro:</p>
+        <div id="level-picker" class="segmented" role="radiogroup" aria-label="Tabuleiro"></div>
+      </div>
+
       <div class="mode-grid">
         <article class="card">
           <h3>Contra o computador</h3>
-          <p class="muted">Escolha a dificuldade:</p>
-          <div class="segmented" role="radiogroup" aria-label="Dificuldade">
-            <button type="button" role="radio" data-difficulty="easy">Fácil</button>
-            <button type="button" role="radio" data-difficulty="medium">Médio</button>
-            <button type="button" role="radio" data-difficulty="hard">Difícil</button>
+          <div id="cpu-type-field" hidden>
+            <div id="cpu-type-picker" class="segmented two" role="radiogroup" aria-label="Tipo de partida">
+              <button type="button" role="radio" data-cpu-type="solo">Desafio solo</button>
+              <button type="button" role="radio" data-cpu-type="versus">Contra a CPU</button>
+            </div>
           </div>
+          <div id="difficulty-field">
+            <p class="muted" id="difficulty-label">Escolha a dificuldade:</p>
+            <div class="segmented" role="radiogroup" aria-label="Dificuldade">
+              <button type="button" role="radio" data-difficulty="easy">Fácil</button>
+              <button type="button" role="radio" data-difficulty="medium">Médio</button>
+              <button type="button" role="radio" data-difficulty="hard">Difícil</button>
+            </div>
+          </div>
+          <p class="muted small" id="cpu-hint" hidden></p>
           <button id="btn-play-cpu" class="btn btn-primary btn-block" type="button">Jogar</button>
         </article>
 
@@ -73,8 +88,8 @@
       </header>
 
       <div class="scoreboard" aria-label="Placar da sessão">
-        <div class="score"><span class="score-label">Você</span><strong id="score-me">0</strong></div>
-        <div class="score"><span class="score-label">Empates</span><strong id="score-draws">0</strong></div>
+        <div class="score"><span class="score-label" id="me-label">Você</span><strong id="score-me">0</strong></div>
+        <div class="score"><span class="score-label" id="draws-label">Empates</span><strong id="score-draws">0</strong></div>
         <div class="score"><span class="score-label" id="opp-label">Computador</span><strong id="score-opp">0</strong></div>
       </div>
 
@@ -97,11 +112,15 @@
   <script src="/games/tictactoe.js"></script>
   <script src="/games/connect4.js"></script>
   <script src="/games/checkers.js"></script>
+  <script src="/games/minesweeper.js"></script>
+  <script src="/games/chess.js"></script>
   <script src="/games/ai.js"></script>
   <!-- Interface de cada jogo -->
   <script src="js/tictactoe.js"></script>
   <script src="js/connect4.js"></script>
   <script src="js/checkers.js"></script>
+  <script src="js/minesweeper.js"></script>
+  <script src="js/chess.js"></script>
   <!-- Controlador das telas, modos e conexão -->
   <script src="js/app.js"></script>
 </body>

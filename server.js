@@ -5,6 +5,8 @@
  *   compartilhada: o navegador usa os mesmos arquivos para a IA local.
  * - No modo online, o servidor é a autoridade: guarda o estado da partida
  *   e valida cada jogada com as regras do jogo. O cliente só envia intenções.
+ * - Jogos com informação oculta (Campo Minado) definem publicState(): o
+ *   cliente só recebe essa versão, sem as minas, até a partida acabar.
  */
 const path = require('path');
 const http = require('http');
@@ -15,6 +17,8 @@ const GAMES = {
   tictactoe: require('./games/tictactoe'),
   connect4: require('./games/connect4'),
   checkers: require('./games/checkers'),
+  minesweeper: require('./games/minesweeper'),
+  chess: require('./games/chess'),
 };
 
 const app = express();
@@ -60,6 +64,11 @@ function findLegalMove(game, state, clientMove) {
   return legal === undefined ? null : legal;
 }
 
+/** O que pode ser enviado ao cliente (jogos com informação oculta escondem o segredo). */
+function publicView(game, state) {
+  return game.publicState ? game.publicState(state) : state;
+}
+
 function scoresFor(room, socketId) {
   const opponentId = room.seats.find((id) => id !== socketId);
   return { me: room.wins[socketId] || 0, opponent: room.wins[opponentId] || 0, draws: room.draws };
@@ -67,14 +76,15 @@ function scoresFor(room, socketId) {
 
 function startMatch(room) {
   const game = GAMES[room.gameId];
-  room.state = game.createState();
+  room.state = game.createState(room.options);
   room.rematch.clear();
   room.seats.forEach((socketId, seat) => {
     io.to(socketId).emit('game:start', {
       gameId: room.gameId,
       code: room.code,
+      options: room.options,
       seat,
-      state: room.state,
+      state: publicView(game, room.state),
       scores: scoresFor(room, socketId),
     });
   });
@@ -112,11 +122,15 @@ io.on('connection', (socket) => {
     if (typeof gameId !== 'string' || !Object.prototype.hasOwnProperty.call(GAMES, gameId)) {
       return reply(ack, { ok: false, error: 'Jogo inválido.' });
     }
+    // Opções da partida (ex.: nível do Campo Minado) são validadas pelo próprio jogo.
+    const game = GAMES[gameId];
+    const options = game.onlineOptions ? game.onlineOptions(data.options) : undefined;
     leaveRoom(socket, 'left');
     const code = generateCode();
     rooms.set(code, {
       code,
       gameId,
+      options,
       seats: [socket.id], // seats[0] joga com as peças do jogador 0 (começa)
       state: null,
       wins: { [socket.id]: 0 },
@@ -125,7 +139,7 @@ io.on('connection', (socket) => {
     });
     socketRoom.set(socket.id, code);
     socket.join(code);
-    reply(ack, { ok: true, code, gameId });
+    reply(ack, { ok: true, code, gameId, options });
   });
 
   socket.on('room:join', (data, ack) => {
@@ -163,7 +177,7 @@ io.on('connection', (socket) => {
 
     reply(ack, { ok: true });
     for (const socketId of room.seats) {
-      io.to(socketId).emit('game:state', { state: room.state, move, scores: scoresFor(room, socketId) });
+      io.to(socketId).emit('game:state', { state: publicView(game, room.state), move, scores: scoresFor(room, socketId) });
     }
   });
 
