@@ -70,20 +70,22 @@
     <!-- Tela 2: escolher o modo -->
     <section id="screen-mode" class="screen" aria-labelledby="mode-title">
       <header class="topbar">
-        <button class="btn btn-ghost" data-action="home" type="button">← Jogos</button>
-        <h2 id="mode-title">Jogo</h2>
+        <button class="btn btn-ghost" data-action="home" type="button">
+          <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Jogos
+        </button>
+        <h2 id="mode-title" class="topbar-title neon-title">Jogo</h2>
         <span class="topbar-spacer"></span>
       </header>
 
       <!-- Só para jogos com níveis de tabuleiro (Campo Minado): vale para os dois modos -->
-      <div id="level-field" class="card level-card" hidden>
-        <p class="muted">Tabuleiro:</p>
-        <div id="level-picker" class="segmented" role="radiogroup" aria-label="Tabuleiro"></div>
+      <div id="level-field" class="panel level-panel" hidden>
+        <p class="field-label">Tabuleiro</p>
+        <div id="level-picker" class="segmented level-picker" role="radiogroup" aria-label="Tabuleiro"></div>
       </div>
 
       <div class="mode-grid">
-        <article class="card">
-          <h3>Contra o computador</h3>
+        <!-- Contra o computador -->
+        <article class="panel panel-cpu">
           <div id="cpu-type-field" hidden>
             <div id="cpu-type-picker" class="segmented two" role="radiogroup" aria-label="Tipo de partida">
               <button type="button" role="radio" data-cpu-type="solo">Desafio solo</button>
@@ -91,36 +93,53 @@
             </div>
           </div>
           <div id="difficulty-field">
-            <p class="muted" id="difficulty-label">Escolha a dificuldade:</p>
-            <div class="segmented" role="radiogroup" aria-label="Dificuldade">
-              <button type="button" role="radio" data-difficulty="easy">Fácil</button>
-              <button type="button" role="radio" data-difficulty="medium">Médio</button>
-              <button type="button" role="radio" data-difficulty="hard">Difícil</button>
+            <p class="field-label" id="difficulty-label">Dificuldade</p>
+            <div class="difficulty-picker" role="radiogroup" aria-label="Dificuldade">
+              <button type="button" role="radio" class="diff diff-easy" data-difficulty="easy"><span class="stars"><span class="star on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2 6.1 20.4l1.3-6.5L2.5 9.3l6.6-.8z"/></svg></span><span class="star"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2 6.1 20.4l1.3-6.5L2.5 9.3l6.6-.8z"/></svg></span><span class="star"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2 6.1 20.4l1.3-6.5L2.5 9.3l6.6-.8z"/></svg></span></span><span class="diff-name">Fácil</span></button>
+              <button type="button" role="radio" class="diff diff-medium" data-difficulty="medium"><span class="stars"><span class="star on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2 6.1 20.4l1.3-6.5L2.5 9.3l6.6-.8z"/></svg></span><span class="star on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2 6.1 20.4l1.3-6.5L2.5 9.3l6.6-.8z"/></svg></span><span class="star"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2 6.1 20.4l1.3-6.5L2.5 9.3l6.6-.8z"/></svg></span></span><span class="diff-name">Médio</span></button>
+              <button type="button" role="radio" class="diff diff-hard" data-difficulty="hard"><span class="stars"><span class="star on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2 6.1 20.4l1.3-6.5L2.5 9.3l6.6-.8z"/></svg></span><span class="star on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2 6.1 20.4l1.3-6.5L2.5 9.3l6.6-.8z"/></svg></span><span class="star on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2 6.1 20.4l1.3-6.5L2.5 9.3l6.6-.8z"/></svg></span></span><span class="diff-name">Difícil</span></button>
             </div>
           </div>
           <p class="muted small" id="cpu-hint" hidden></p>
-          <button id="btn-play-cpu" class="btn btn-primary btn-block" type="button">Jogar</button>
+          <button id="btn-play-cpu" class="btn btn-neon btn-pink btn-lg btn-block" type="button">
+            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="7" width="14" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9 16h6M2 12h3M19 12h3"/></svg>
+            Jogar contra o computador
+          </button>
         </article>
 
-        <article class="card" id="online-card">
-          <h3>Jogar online</h3>
-          <div id="online-actions">
-            <p class="muted">Crie uma sala e passe o código para um amigo, ou entre com o código dele.</p>
-            <button id="btn-create-room" class="btn btn-primary btn-block" type="button">Criar sala</button>
-            <form id="join-form" class="join-form" autocomplete="off">
-              <input id="join-code" type="text" inputmode="text" maxlength="4" placeholder="CÓDIGO"
-                     aria-label="Código da sala" autocapitalize="characters" spellcheck="false">
-              <button class="btn" type="submit">Entrar</button>
-            </form>
+        <!-- Online -->
+        <article class="panel panel-online" id="online-card">
+          <button id="btn-online-toggle" class="btn btn-neon btn-cyan btn-lg btn-block" type="button" aria-expanded="false" aria-controls="online-body">
+            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></svg>
+            Jogar online
+          </button>
+          <div id="online-body" class="arcade-panel" hidden>
+            <div id="online-actions">
+              <div class="arcade-block">
+                <p class="field-label">Nova sala</p>
+                <p class="muted small">Crie uma sala e passe o código de 4 letras para um amigo.</p>
+                <button id="btn-create-room" class="btn btn-neon btn-cyan btn-block" type="button">Criar sala</button>
+              </div>
+              <div class="arcade-divider" aria-hidden="true"><span>ou</span></div>
+              <form id="join-form" class="arcade-block join-form" autocomplete="off" novalidate>
+                <label class="field-label" for="join-code">Entrar na sala</label>
+                <div class="code-row">
+                  <input id="join-code" class="code-input" type="text" inputmode="text" maxlength="4" placeholder="ABCD"
+                         aria-describedby="code-hint" autocapitalize="characters" spellcheck="false">
+                  <button class="btn btn-outline-cyan" type="submit">Entrar na sala</button>
+                </div>
+                <p id="code-hint" class="code-hint">Digite as 4 letras do código.</p>
+              </form>
+            </div>
+            <div id="online-waiting" class="waiting" hidden>
+              <p class="field-label">Código da sala</p>
+              <button id="room-code" class="room-code" type="button" title="Copiar código">----</button>
+              <p class="muted small" id="copy-hint">Toque no código para copiar</p>
+              <p class="waiting-text"><span class="spinner" aria-hidden="true"></span> Aguardando adversário…</p>
+              <button id="btn-cancel-room" class="btn btn-ghost btn-block" type="button">Cancelar</button>
+            </div>
+            <p id="online-error" class="error" role="alert" hidden></p>
           </div>
-          <div id="online-waiting" class="waiting" hidden>
-            <p class="muted">Código da sala:</p>
-            <button id="room-code" class="room-code" type="button" title="Copiar código">----</button>
-            <p class="muted small" id="copy-hint">Toque no código para copiar</p>
-            <p class="waiting-text"><span class="spinner" aria-hidden="true"></span> Aguardando adversário…</p>
-            <button id="btn-cancel-room" class="btn btn-ghost btn-block" type="button">Cancelar</button>
-          </div>
-          <p id="online-error" class="error" role="alert" hidden></p>
         </article>
       </div>
     </section>
@@ -134,9 +153,10 @@
       </header>
 
       <div class="scoreboard" aria-label="Placar da sessão">
-        <div class="score"><span class="score-label" id="me-label">Você</span><strong id="score-me">0</strong></div>
-        <div class="score"><span class="score-label" id="draws-label">Empates</span><strong id="score-draws">0</strong></div>
-        <div class="score"><span class="score-label" id="opp-label">Computador</span><strong id="score-opp">0</strong></div>
+        <span class="scoreboard-tag">Placar</span>
+        <div class="score score-me"><span class="score-label" id="me-label">Você</span><strong id="score-me">0</strong></div>
+        <div class="score score-draws"><span class="score-label" id="draws-label">Empates</span><strong id="score-draws">0</strong></div>
+        <div class="score score-opp"><span class="score-label" id="opp-label">Computador</span><strong id="score-opp">0</strong></div>
       </div>
 
       <div id="status" class="status" role="status" aria-live="polite">…</div>

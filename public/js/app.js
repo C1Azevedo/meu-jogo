@@ -35,6 +35,10 @@
     cpuHint: $('#cpu-hint'),
     btnPlayCpu: $('#btn-play-cpu'),
     btnCreateRoom: $('#btn-create-room'),
+    btnOnlineToggle: $('#btn-online-toggle'),
+    onlineBody: $('#online-body'),
+    codeHint: $('#code-hint'),
+    scoreboard: document.querySelector('.scoreboard'),
     joinForm: $('#join-form'),
     joinCode: $('#join-code'),
     onlineActions: $('#online-actions'),
@@ -155,6 +159,7 @@
     // Campo Minado tem "desafio solo" além de "contra a CPU"
     el.cpuTypeField.hidden = game.ai.kind !== 'minesweeper';
     resetOnlinePanel();
+    setOnlineOpen(false);
     renderModeOptions();
     showScreen('mode');
   }
@@ -175,7 +180,7 @@
     });
     const solo = selectedGameId && hasSoloMode(selectedGameId);
     el.difficultyField.hidden = !!solo && cpuType === 'solo';
-    el.difficultyLabel.textContent = solo ? 'Dificuldade da CPU:' : 'Escolha a dificuldade:';
+    el.difficultyLabel.textContent = solo ? 'Dificuldade da CPU' : 'Dificuldade';
     el.cpuHint.hidden = !solo;
     el.cpuHint.textContent = cpuType === 'solo'
       ? 'Abra todas as casas sem pisar em minas, contra o relógio.'
@@ -212,6 +217,7 @@
       rematchMine: false,
       rematchTheirs: false,
     };
+    [el.scoreMe, el.scoreDraws, el.scoreOpp].forEach((node) => { node.dataset.ready = ''; });
     session.view = viewDef.create(el.board, { onMove: handleUserMove });
     el.gameTitle.textContent = session.game.name;
     el.meLabel.textContent = solo ? 'Vitórias' : 'Você';
@@ -465,7 +471,27 @@
     el.onlineWaiting.hidden = true;
     el.btnCreateRoom.disabled = false;
     el.joinCode.value = '';
+    setCodeState('');
     showOnlineError('');
+  }
+
+  /** Abre/fecha o painel online (botão "Jogar online"). */
+  function setOnlineOpen(open) {
+    el.onlineBody.hidden = !open;
+    el.btnOnlineToggle.setAttribute('aria-expanded', String(open));
+  }
+
+  /** Validação visual do código: '' (neutro), 'valid' (4 letras) ou 'invalid'. */
+  function setCodeState(state, message) {
+    el.joinCode.dataset.state = state;
+    el.joinCode.setAttribute('aria-invalid', String(state === 'invalid'));
+    el.codeHint.textContent = message || (state === 'valid' ? 'Código completo. Toque em Entrar na sala.' : 'Digite as 4 letras do código.');
+    if (state === 'invalid') {
+      // reinicia a animação de "tremida"
+      el.joinCode.classList.remove('shake');
+      void el.joinCode.offsetWidth;
+      el.joinCode.classList.add('shake');
+    }
   }
 
   function cancelWaitingRoom() {
@@ -494,13 +520,13 @@
 
   function joinRoom(rawCode) {
     const code = rawCode.trim().toUpperCase();
-    if (!/^[A-Z]{4}$/.test(code)) return showOnlineError('O código tem 4 letras.');
+    if (!/^[A-Z]{4}$/.test(code)) return setCodeState('invalid', 'O código tem 4 letras.');
     const sock = ensureSocket();
     if (!sock) return;
     showOnlineError('');
     sock.timeout(8000).emit('room:join', { code }, (err, res) => {
       if (err) return showOnlineError('Não foi possível conectar ao servidor.');
-      if (!res.ok) return showOnlineError(res.error);
+      if (!res.ok) return setCodeState('invalid', res.error);
       // A partida começa com o evento 'game:start'.
     });
   }
@@ -534,9 +560,12 @@
     });
     el.board.classList.toggle('disabled', s.ended);
 
-    el.scoreMe.textContent = s.scores.me;
-    el.scoreDraws.textContent = s.solo ? formatTime(s.scores.best) : s.scores.draws;
-    el.scoreOpp.textContent = s.scores.opponent;
+    setScore(el.scoreMe, s.scores.me);
+    setScore(el.scoreDraws, s.solo ? formatTime(s.scores.best) : s.scores.draws);
+    setScore(el.scoreOpp, s.scores.opponent);
+    // Indicador de quem lidera o placar da sessão
+    el.scoreboard.classList.toggle('me-leading', s.scores.me > s.scores.opponent);
+    el.scoreboard.classList.toggle('opp-leading', s.scores.opponent > s.scores.me);
 
     const { text, kind, badgeSeat } = statusInfo(s);
     el.status.className = 'status' + (kind ? ' ' + kind : '');
@@ -556,6 +585,20 @@
       el.btnAgain.disabled = s.rematchMine;
     }
     el.btnBackMenu.hidden = !s.ended;
+  }
+
+  /** Atualiza um número do placar com um "pulso" quando ele muda. */
+  function setScore(node, value) {
+    const text = String(value);
+    if (node.textContent === text) return;
+    const changed = node.textContent !== '' && node.dataset.ready === '1';
+    node.textContent = text;
+    node.dataset.ready = '1';
+    if (changed) {
+      node.classList.remove('bump');
+      void node.offsetWidth;
+      node.classList.add('bump');
+    }
   }
 
   function formatTime(ms) {
@@ -666,6 +709,12 @@
   });
   el.joinCode.addEventListener('input', () => {
     el.joinCode.value = el.joinCode.value.toUpperCase().replace(/[^A-Z]/g, '');
+    setCodeState(el.joinCode.value.length === 4 ? 'valid' : '');
+  });
+  el.btnOnlineToggle.addEventListener('click', () => {
+    const open = el.onlineBody.hidden;
+    setOnlineOpen(open);
+    if (open) el.btnCreateRoom.focus({ preventScroll: true });
   });
   el.btnCancelRoom.addEventListener('click', cancelWaitingRoom);
   el.roomCode.addEventListener('click', () => {
