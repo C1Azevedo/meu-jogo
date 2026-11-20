@@ -185,3 +185,85 @@ test('Damas online: servidor recusa jogadas ilegais e usa as capturas calculadas
   a.close();
   b.close();
 });
+
+test('Campo Minado online: opções validadas, minas nunca enviadas e trapaças recusadas', async () => {
+  const a = await connect();
+  const b = await connect();
+  // Cliente tenta forçar o modo solo e mandar lixo nas opções: o servidor ignora.
+  const created = await emit(a, 'room:create', { gameId: 'minesweeper', options: { level: 'medium', mode: 'solo', mines: [1, 2] } });
+  assert.deepStrictEqual(created.options, { level: 'medium', mode: 'versus' });
+
+  // Registra TUDO que os clientes recebem, para conferir que as minas nunca vazam.
+  const received = [];
+  for (const c of [a, b]) c.onAny((event, payload) => received.push({ event, payload }));
+
+  const startA = once(a, 'game:start');
+  const startB = once(b, 'game:start');
+  await emit(b, 'room:join', { code: created.code });
+  const [sa, sb] = await Promise.all([startA, startB]);
+  assert.strictEqual(sa.state.cols, 16);
+  assert.strictEqual(sb.state.mode, 'versus');
+
+  // Trapaças: fora da vez, fora do tabuleiro, formato errado
+  assert.strictEqual((await emit(b, 'game:move', { move: 0 })).ok, false);
+  for (const bad of [-1, 256, '5', 2.5, { index: 3 }]) {
+    assert.strictEqual((await emit(a, 'game:move', { move: bad })).ok, false, JSON.stringify(bad));
+  }
+
+  // Primeira jogada de A: nunca é mina
+  let upd = once(b, 'game:state');
+  assert.ok((await emit(a, 'game:move', { move: 136 })).ok);
+  let { state } = await upd;
+  assert.strictEqual(state.exploded, null);
+  assert.ok(state.opened[0] >= 1);
+  // Abrir de novo uma casa já aberta é recusado
+  assert.strictEqual((await emit(b, 'game:move', { move: 136 })).ok, false);
+
+  // B pisa numa mina (o teste espia o servidor para saber onde há mina).
+  const room = rooms.get(created.code);
+  const mine = room.state.mines.indexOf(1);
+  const endA = once(a, 'game:state');
+  upd = once(b, 'game:state');
+  assert.ok((await emit(b, 'game:move', { move: mine })).ok);
+  ({ state } = await upd);
+  const finalA = await endA;
+  assert.strictEqual(state.winner, 0);
+  assert.strictEqual(state.exploded, mine);
+  assert.strictEqual(state.mineMap.length, 40, 'no fim, as minas são reveladas');
+  assert.deepStrictEqual(finalA.scores, { me: 1, opponent: 0, draws: 0 });
+  // Depois do fim, nada é aceito
+  assert.strictEqual((await emit(a, 'game:move', { move: 0 })).ok, false);
+
+  // Nenhuma mensagem antes do fim continha as minas.
+  for (const { event, payload } of received) {
+    const json = JSON.stringify(payload);
+    assert.ok(!json.includes('"mines"'), `${event} vazou o campo mines`);
+    if (payload && payload.state && payload.state.winner === null) {
+      assert.strictEqual(payload.state.mineMap, null, `${event} vazou mineMap`);
+      assert.ok(payload.state.cells.every((v) => v >= -1 && v <= 8));
+    }
+  }
+
+  // Revanche: lugares invertidos e tabuleiro novo do mesmo nível
+  const ra = once(a, 'game:start');
+  const rb = once(b, 'game:start');
+  a.emit('game:rematch');
+  b.emit('game:rematch');
+  const [na, nb] = await Promise.all([ra, rb]);
+  assert.strictEqual(na.seat, 1);
+  assert.strictEqual(nb.seat, 0);
+  assert.strictEqual(na.state.moveCount, 0);
+  assert.strictEqual(na.state.cols, 16);
+  assert.ok(!JSON.stringify(na).includes('"mines"'));
+  a.close();
+  b.close();
+});
+
+test('Campo Minado online: nível inválido vira fácil', async () => {
+  const a = await connect();
+  for (const options of [{ level: 'insano' }, null, 'medium', { level: '__proto__' }]) {
+    const res = await emit(a, 'room:create', { gameId: 'minesweeper', options });
+    assert.deepStrictEqual(res.options, { level: 'easy', mode: 'versus' }, JSON.stringify(options));
+  }
+  a.close();
+});

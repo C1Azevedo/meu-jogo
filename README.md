@@ -1,6 +1,6 @@
 # Hub de Jogos
 
-Jogo da Velha, Ligue 4 e Damas no navegador: contra o computador (3 dificuldades) ou online 1x1 com um amigo, usando um código de sala.
+Jogo da Velha, Ligue 4, Damas e Campo Minado no navegador: contra o computador (3 dificuldades) ou online 1x1 com um amigo, usando um código de sala.
 
 - **Servidor:** Node.js, Express e Socket.IO
 - **Front-end:** HTML, CSS e JavaScript puro (sem framework, sem etapa de build)
@@ -50,7 +50,11 @@ Se o adversário fechar a página ou cair a conexão, a partida é encerrada e a
 |---------|----------------|
 | Fácil   | Na maioria das vezes joga aleatoriamente. Às vezes aproveita uma vitória imediata, mas não se defende: erra de propósito. |
 | Médio   | Olha 2 lances à frente (3 nas Damas): ganha quando pode e bloqueia as ameaças óbvias. |
-| Difícil | Minimax com poda alfa-beta e aprofundamento iterativo. No Jogo da Velha a busca é completa (não perde nunca). No Ligue 4 e nas Damas a profundidade é limitada e há um limite de tempo (cerca de 1,5 s), para não travar a tela. |
+| Difícil | Minimax com poda alfa-beta e aprofundamento iterativo. No Jogo da Velha a busca é completa (não perde nunca). No Ligue 4 e nas Damas a busca vai aprofundando até esgotar o tempo (cerca de 1,5 s). |
+
+A IA roda num **Web Worker** (`public/js/ai-worker.js`), fora da thread da interface, então a tela nunca trava enquanto o computador pensa. Se o navegador não suportar Workers, a IA roda na thread principal.
+
+No Campo Minado a IA não usa minimax, e sim dedução (veja abaixo).
 
 ### Regras das Damas (regras brasileiras)
 
@@ -62,6 +66,25 @@ Se o adversário fechar a página ou cair a conexão, a partida é encerrada e a
 - As peças capturadas só saem do tabuleiro no fim da jogada e não podem ser puladas duas vezes.
 - **Promoção a dama** quando a pedra termina a jogada na última linha. A **dama é voadora**: anda e captura a qualquer distância na diagonal.
 - Perde quem fica sem peças ou sem movimentos. Empate depois de 20 lances seguidos de cada lado só com damas e sem captura.
+
+### Campo Minado
+
+- **Tabuleiros:** Fácil (9×9, 10 minas), Médio (16×16, 40 minas) e Difícil (30×16, 99 minas).
+- O primeiro clique nunca cai em mina e sempre abre uma área: as minas só são sorteadas depois dele, longe da casa clicada.
+- Casas sem minas ao redor abrem as vizinhas automaticamente.
+- **Bandeira:** clique direito, toque longo no celular ou o botão ⛏️/🚩 da barra, que alterna o que o toque faz. As bandeiras ficam só no seu aparelho.
+- Cronômetro e contador de minas restantes (minas menos bandeiras).
+
+Modos:
+
+- **Desafio solo:** abra todas as casas sem minas. O placar mostra vitórias, derrotas e o melhor tempo da sessão.
+- **Contra a CPU:** você e a CPU se alternam no mesmo tabuleiro, e quem pisar numa mina perde. Se o campo for limpo sem explosão, vence quem abriu mais casas. Dificuldades da CPU:
+  - **Fácil:** chuta casas ao acaso.
+  - **Médio:** usa deduções simples (um número já cercado pelas suas minas libera as outras vizinhas; um número com tantas vizinhas fechadas quanto minas faltando marca todas como minas) e só chuta quando não há casa segura.
+  - **Difícil:** deduções por restrições e probabilidade. A IA enumera todas as combinações de minas possíveis na "fronteira" (casas fechadas vizinhas de números), pondera pelo número de jeitos de distribuir as minas restantes no interior e abre a casa com menor chance de mina. Jogando sozinha, vence cerca de 95% das partidas no Fácil, 80% no Médio e 35% no Difícil.
+- **Online:** mesmas regras do modo contra a CPU. Quem cria a sala escolhe o tabuleiro.
+
+A IA joga de forma justa: ela só enxerga o mesmo que você (as casas abertas), nunca as minas.
 
 ### Ligue 4
 
@@ -75,7 +98,8 @@ games/                Lógica pura dos jogos e da IA, compartilhada entre servid
   tictactoe.js          Regras do Jogo da Velha
   connect4.js           Regras do Ligue 4
   checkers.js           Regras das Damas
-  ai.js                 IA genérica: fácil, médio e difícil (minimax com poda alfa-beta)
+  minesweeper.js        Regras do Campo Minado (inclui o estado público, sem as minas)
+  ai.js                 IA: minimax com poda alfa-beta e IA de dedução do Campo Minado
 public/               Front-end estático
   index.html            As três telas (início, modo e jogo)
   css/style.css         Estilos (inclui tema escuro automático)
@@ -83,19 +107,30 @@ public/               Front-end estático
   js/tictactoe.js       Interface do Jogo da Velha
   js/connect4.js        Interface do Ligue 4
   js/checkers.js        Interface das Damas
+  js/minesweeper.js     Interface do Campo Minado
+  js/ai-worker.js       Web Worker que roda a IA fora da thread da interface
 test/                 Testes automatizados (node --test)
 ```
 
 Cada arquivo em `games/` segue a mesma interface (`createState`, `getMoves`, `applyMove`, `evaluate`, `moveKey`) e funciona tanto com `require()` no Node quanto com `<script>` no navegador. Assim, a IA roda no navegador e o servidor valida as jogadas online com exatamente as mesmas regras.
 
+Ganchos opcionais, usados por jogos que precisam deles:
+
+- `publicState(state)`: o que pode ser mostrado ao jogador. No Campo Minado, é o estado sem as minas.
+- `onlineOptions(options)`: valida as opções que o cliente manda ao criar a sala (por exemplo, o nível do tabuleiro).
+- `LEVELS`: mostra o seletor de tabuleiro na tela de modo.
+- `resultDetail(state, seat)` e `statusNote(state)`: textos extras na barra de status.
+
 **O servidor nunca confia no cliente.** No modo online, o estado da partida fica no servidor. O cliente só manda a jogada que quer fazer. O servidor confere se é a vez daquele jogador e procura a jogada entre as jogadas legais calculadas por ele. Se não encontrar, recusa. Na jogada aceita, ele aplica a versão que ele mesmo calculou (por exemplo, as peças capturadas nas Damas) e envia o novo estado para os dois jogadores.
+
+No Campo Minado o tabuleiro fica só no servidor. Os jogadores recebem apenas o estado público (casas abertas e seus números), e as posições das minas só são enviadas quando a partida termina. Os testes registram todas as mensagens que chegam aos clientes e conferem que nenhuma delas contém as minas.
 
 ### Adicionar um jogo novo
 
 1. Crie `games/meujogo.js` com a mesma interface dos outros jogos (copie `tictactoe.js` como modelo).
 2. Registre o jogo em `GAMES`, no topo de `server.js`.
 3. Crie `public/js/meujogo.js` com a interface (`icon`, `description`, `badge`, `create`).
-4. Inclua os dois scripts em `public/index.html` e adicione o id em `GAME_ORDER`, em `public/js/app.js`.
+4. Inclua os dois scripts em `public/index.html`, adicione o id em `GAME_ORDER` (`public/js/app.js`) e o arquivo de regras no `importScripts` de `public/js/ai-worker.js`.
 
 ## Deploy no Render
 

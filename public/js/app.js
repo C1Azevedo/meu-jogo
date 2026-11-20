@@ -5,13 +5,18 @@
  * Cada jogo fornece:
  *   - window.Games[id]   → regras (mesmo arquivo usado pelo servidor)
  *   - window.UI.views[id] → interface: { icon, description, badge(seat), create(container, { onMove }) }
+ *
+ * Ganchos opcionais das regras, usados quando existem:
+ *   game.LEVELS            → mostra o seletor de tabuleiro (Campo Minado)
+ *   game.publicState(s)    → o que a interface pode mostrar (esconde segredos)
+ *   game.resultDetail(s, seat) / game.statusNote(s) → textos extras no status
  */
 (function () {
   'use strict';
 
   const Games = window.Games;
   const UI = window.UI;
-  const GAME_ORDER = ['tictactoe', 'connect4', 'checkers'].filter((id) => Games[id] && UI.views[id]);
+  const GAME_ORDER = ['tictactoe', 'connect4', 'checkers', 'minesweeper', 'chess'].filter((id) => Games[id] && UI.views[id]);
   const CPU_DELAY_MS = 450;
   const DIFFICULTY_LABEL = { easy: 'Fácil', medium: 'Médio', hard: 'Difícil' };
 
@@ -21,6 +26,13 @@
     gameList: $('#game-list'),
     modeTitle: $('#mode-title'),
     difficultyButtons: document.querySelectorAll('[data-difficulty]'),
+    difficultyField: $('#difficulty-field'),
+    difficultyLabel: $('#difficulty-label'),
+    levelField: $('#level-field'),
+    levelPicker: $('#level-picker'),
+    cpuTypeField: $('#cpu-type-field'),
+    cpuTypeButtons: document.querySelectorAll('[data-cpu-type]'),
+    cpuHint: $('#cpu-hint'),
     btnPlayCpu: $('#btn-play-cpu'),
     btnCreateRoom: $('#btn-create-room'),
     joinForm: $('#join-form'),
@@ -37,6 +49,8 @@
     scoreDraws: $('#score-draws'),
     scoreOpp: $('#score-opp'),
     oppLabel: $('#opp-label'),
+    meLabel: $('#me-label'),
+    drawsLabel: $('#draws-label'),
     status: $('#status'),
     board: $('#board'),
     btnAgain: $('#btn-again'),
@@ -51,15 +65,17 @@
 
   let selectedGameId = null;
   let difficulty = storageGet('hub.difficulty') || 'medium';
+  let level = storageGet('hub.level') || 'easy'; // tabuleiro do Campo Minado
+  let cpuType = storageGet('hub.cpuType') || 'solo'; // Campo Minado: 'solo' ou 'versus'
   let socket = null;
   let waitingCode = null; // sala criada aguardando adversário
   let currentScreen = 'home';
 
   /**
    * Sessão de jogo ativa (null fora da tela de jogo).
-   * { gameId, game, viewDef, view, mode: 'cpu'|'online', difficulty, seat, state,
-   *   scores: {me, opponent, draws}, matchCount, cpuTimer, pending, code,
-   *   ended, endReason, rematchMine, rematchTheirs }
+   * { gameId, game, viewDef, view, mode: 'cpu'|'online', difficulty, options, solo,
+   *   seat, state, scores: {me, opponent, draws, best}, matchCount, cpuTimer, pending,
+   *   code, ended, endReason, rematchMine, rematchTheirs }
    */
   let session = null;
 
@@ -106,25 +122,67 @@
 
   function openMode(gameId) {
     selectedGameId = gameId;
-    el.modeTitle.textContent = Games[gameId].name;
+    const game = Games[gameId];
+    el.modeTitle.textContent = game.name;
+
+    // Seletor de tabuleiro (só para jogos com níveis)
+    el.levelField.hidden = !game.LEVELS;
+    el.levelPicker.innerHTML = '';
+    if (game.LEVELS) {
+      if (!game.LEVELS[level]) level = 'easy';
+      for (const [id, info] of Object.entries(game.LEVELS)) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('role', 'radio');
+        btn.dataset.level = id;
+        btn.innerHTML = `${info.label}<small>${info.cols}×${info.rows} · ${info.mines} minas</small>`;
+        btn.addEventListener('click', () => {
+          level = id;
+          storageSet('hub.level', level);
+          renderModeOptions();
+        });
+        el.levelPicker.appendChild(btn);
+      }
+    }
+    // Campo Minado tem "desafio solo" além de "contra a CPU"
+    el.cpuTypeField.hidden = game.ai.kind !== 'minesweeper';
     resetOnlinePanel();
+    renderModeOptions();
     showScreen('mode');
   }
 
-  function renderDifficulty() {
+  function hasSoloMode(gameId) {
+    return Games[gameId].ai.kind === 'minesweeper';
+  }
+
+  function renderModeOptions() {
     el.difficultyButtons.forEach((btn) => {
       btn.setAttribute('aria-checked', String(btn.dataset.difficulty === difficulty));
     });
+    el.levelPicker.querySelectorAll('[data-level]').forEach((btn) => {
+      btn.setAttribute('aria-checked', String(btn.dataset.level === level));
+    });
+    el.cpuTypeButtons.forEach((btn) => {
+      btn.setAttribute('aria-checked', String(btn.dataset.cpuType === cpuType));
+    });
+    const solo = selectedGameId && hasSoloMode(selectedGameId);
+    el.difficultyField.hidden = !!solo && cpuType === 'solo';
+    el.difficultyLabel.textContent = solo ? 'Dificuldade da CPU:' : 'Escolha a dificuldade:';
+    el.cpuHint.hidden = !solo;
+    el.cpuHint.textContent = cpuType === 'solo'
+      ? 'Abra todas as casas sem pisar em minas, contra o relógio.'
+      : 'Você e a CPU se alternam no mesmo tabuleiro. Quem pisar numa mina perde.';
   }
 
   // ---------------------------------------------------------------------------
   // Sessão de jogo (comum aos dois modos)
   // ---------------------------------------------------------------------------
 
-  function beginSession(gameId, mode) {
+  function beginSession(gameId, mode, options) {
     endSession();
     selectedGameId = gameId;
     const viewDef = UI.views[gameId];
+    const solo = !!(options && options.mode === 'solo');
     session = {
       gameId,
       game: Games[gameId],
@@ -132,9 +190,11 @@
       view: null,
       mode,
       difficulty,
+      options,
+      solo,
       seat: 0,
       state: null,
-      scores: { me: 0, opponent: 0, draws: 0 },
+      scores: { me: 0, opponent: 0, draws: 0, best: null },
       matchCount: 0,
       cpuTimer: null,
       pending: false,
@@ -146,8 +206,15 @@
     };
     session.view = viewDef.create(el.board, { onMove: handleUserMove });
     el.gameTitle.textContent = session.game.name;
-    el.oppLabel.textContent = mode === 'cpu' ? 'Computador' : 'Adversário';
-    el.gameSubtitle.textContent = mode === 'cpu' ? DIFFICULTY_LABEL[difficulty] : '';
+    el.meLabel.textContent = solo ? 'Vitórias' : 'Você';
+    el.drawsLabel.textContent = solo ? 'Recorde' : 'Empates';
+    el.oppLabel.textContent = solo ? 'Derrotas' : mode === 'cpu' ? 'Computador' : 'Adversário';
+    const levelLabel = options && options.level && session.game.LEVELS ? session.game.LEVELS[options.level].label : '';
+    if (mode === 'cpu') {
+      el.gameSubtitle.textContent = solo ? `Solo · ${levelLabel}` : [DIFFICULTY_LABEL[difficulty], levelLabel].filter(Boolean).join(' · ');
+    } else {
+      el.gameSubtitle.textContent = '';
+    }
     showScreen('game');
   }
 
@@ -209,6 +276,10 @@
 
   function recordResult(state) {
     const s = session;
+    if (s.solo && state.winner === s.seat && state.endedAt && state.startedAt) {
+      const time = state.endedAt - state.startedAt;
+      if (s.scores.best === null || time < s.scores.best) s.scores.best = time;
+    }
     if (state.winner === 'draw') s.scores.draws++;
     else if (state.winner === s.seat) s.scores.me++;
     else s.scores.opponent++;
@@ -219,17 +290,18 @@
   // ---------------------------------------------------------------------------
 
   function startCpuSession() {
-    beginSession(selectedGameId, 'cpu');
+    const options = hasSoloMode(selectedGameId) ? { level, mode: cpuType } : undefined;
+    beginSession(selectedGameId, 'cpu', options);
     startCpuMatch();
   }
 
   function startCpuMatch() {
     const s = session;
     clearTimeout(s.cpuTimer);
-    // Alterna quem começa a cada partida.
-    s.seat = s.matchCount % 2 === 0 ? 0 : 1;
+    // Alterna quem começa a cada partida (no desafio solo, só há um jogador).
+    s.seat = s.solo || s.matchCount % 2 === 0 ? 0 : 1;
     s.matchCount++;
-    s.state = s.game.createState();
+    s.state = s.game.createState(s.options);
     if (s.view.reset) s.view.reset();
     render();
     scheduleCpuMove();
@@ -247,12 +319,70 @@
     const s = session;
     if (!s || s.mode !== 'cpu' || s.state.winner !== null || s.state.turn === s.seat) return;
     const stateAtSchedule = s.state;
-    s.cpuTimer = setTimeout(() => {
+    const startedAt = Date.now();
+    computeAiMove(s.gameId, s.state, s.difficulty).then((move) => {
       // Descarta se o usuário saiu ou reiniciou nesse meio-tempo.
-      if (session !== s || s.state !== stateAtSchedule) return;
-      const move = Games.ai.chooseMove(s.game, s.state, s.difficulty);
-      if (move !== null && move !== undefined) applyLocalMove(move);
-    }, CPU_DELAY_MS);
+      if (session !== s || s.state !== stateAtSchedule || move === null || move === undefined) return;
+      // Pequena pausa mínima para a jogada da CPU não parecer instantânea.
+      const wait = Math.max(0, CPU_DELAY_MS - (Date.now() - startedAt));
+      s.cpuTimer = setTimeout(() => {
+        if (session !== s || s.state !== stateAtSchedule) return;
+        const legal = findLegalMove(s.game, s.state, move);
+        if (legal !== null) applyLocalMove(legal);
+      }, wait);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // IA em Web Worker (a tela não trava enquanto o computador pensa)
+  // ---------------------------------------------------------------------------
+
+  let aiWorker = null; // null: ainda não criado; false: indisponível (usa a thread principal)
+  let aiRequestId = 0;
+  const aiPending = new Map();
+
+  function getAiWorker() {
+    if (aiWorker !== null) return aiWorker;
+    try {
+      aiWorker = new Worker('js/ai-worker.js');
+      aiWorker.onmessage = (e) => {
+        const req = aiPending.get(e.data.id);
+        if (!req) return;
+        aiPending.delete(e.data.id);
+        if (e.data.error) req.resolve(computeAiMoveHere(req));
+        else req.resolve(e.data.move);
+      };
+      aiWorker.onerror = (e) => {
+        // Se o Worker falhar, segue jogando na thread principal.
+        if (e && e.preventDefault) e.preventDefault();
+        aiWorker.terminate();
+        aiWorker = false;
+        for (const req of aiPending.values()) req.resolve(computeAiMoveHere(req));
+        aiPending.clear();
+      };
+    } catch (err) {
+      aiWorker = false;
+    }
+    return aiWorker;
+  }
+
+  function computeAiMoveHere(req) {
+    return Games.ai.chooseMove(Games[req.gameId], req.state, req.difficulty);
+  }
+
+  function computeAiMove(gameId, state, difficultyLevel) {
+    return new Promise((resolve) => {
+      const req = { gameId, state, difficulty: difficultyLevel, resolve };
+      const worker = getAiWorker();
+      if (!worker) {
+        // Sem Worker: dá um respiro para a tela desenhar antes de calcular.
+        setTimeout(() => resolve(computeAiMoveHere(req)), 30);
+        return;
+      }
+      const id = ++aiRequestId;
+      aiPending.set(id, req);
+      worker.postMessage({ id, gameId, state, difficulty: difficultyLevel });
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -267,11 +397,11 @@
     }
     socket = window.io();
 
-    socket.on('game:start', ({ gameId, code, seat, state, scores }) => {
+    socket.on('game:start', ({ gameId, code, options, seat, state, scores }) => {
       waitingCode = null;
       const isRematch = session && session.mode === 'online' && session.code === code && !session.ended;
       if (!isRematch) {
-        beginSession(gameId, 'online');
+        beginSession(gameId, 'online', options);
         session.code = code;
         el.gameSubtitle.textContent = `Sala ${code}`;
       } else if (session.view.reset) {
@@ -341,7 +471,8 @@
     if (!sock) return;
     showOnlineError('');
     el.btnCreateRoom.disabled = true;
-    sock.timeout(8000).emit('room:create', { gameId: selectedGameId }, (err, res) => {
+    const options = Games[selectedGameId].LEVELS ? { level } : undefined;
+    sock.timeout(8000).emit('room:create', { gameId: selectedGameId, options }, (err, res) => {
       el.btnCreateRoom.disabled = false;
       if (err) return showOnlineError('Não foi possível conectar ao servidor.');
       if (!res.ok) return showOnlineError(res.error);
@@ -383,11 +514,20 @@
     const { state } = s;
     const over = state.winner !== null;
 
-    s.view.render(state, { interactive: isMyTurn(), seat: s.seat });
+    // A interface só recebe o estado público (no Campo Minado, sem as minas).
+    const shown = s.game.publicState ? s.game.publicState(state) : state;
+    s.view.render(shown, {
+      interactive: isMyTurn(),
+      seat: s.seat,
+      solo: s.solo,
+      mode: s.mode,
+      oppName: s.mode === 'cpu' ? 'CPU' : 'Adversário',
+      ended: s.ended,
+    });
     el.board.classList.toggle('disabled', s.ended);
 
     el.scoreMe.textContent = s.scores.me;
-    el.scoreDraws.textContent = s.scores.draws;
+    el.scoreDraws.textContent = s.solo ? formatTime(s.scores.best) : s.scores.draws;
     el.scoreOpp.textContent = s.scores.opponent;
 
     const { text, kind, badgeSeat } = statusInfo(s);
@@ -410,9 +550,26 @@
     el.btnBackMenu.hidden = !s.ended;
   }
 
+  function formatTime(ms) {
+    if (ms === null || ms === undefined) return '—';
+    const total = Math.floor(ms / 1000);
+    return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+  }
+
   function statusInfo(s) {
     const { state, mode } = s;
     const opp = mode === 'cpu' ? 'O computador' : 'O adversário';
+
+    if (s.solo) {
+      if (state.winner === null) {
+        const text = state.moveCount === 0 ? 'Toque numa casa para começar' : 'Abra todas as casas sem minas';
+        return { text, kind: 'my-turn', badgeSeat: null };
+      }
+      if (state.winner === s.seat) {
+        return { text: `Campo limpo em ${formatTime(state.endedAt - state.startedAt)}! 🎉`, kind: 'win', badgeSeat: null };
+      }
+      return { text: 'Você pisou numa mina! 💥', kind: 'lose', badgeSeat: null };
+    }
 
     if (s.ended) {
       const messages = {
@@ -436,6 +593,8 @@
         result = `${opp} venceu.`;
         kind = 'lose';
       }
+      const detail = s.game.resultDetail ? s.game.resultDetail(state, s.seat) : '';
+      if (detail) result += ' ' + detail;
       if (mode === 'online' && s.rematchTheirs && !s.rematchMine) result += ' O adversário quer revanche!';
       return { text: result, kind, badgeSeat: null };
     }
@@ -444,6 +603,8 @@
     if (state.turn === s.seat) {
       let text = s.pending ? 'Enviando jogada…' : `Sua vez (${names[s.seat]})`;
       if (!s.pending && s.game.hasCaptures && s.game.hasCaptures(state)) text += ' — captura obrigatória!';
+      const note = s.game.statusNote ? s.game.statusNote(state) : '';
+      if (note && !s.pending) text += ' — ' + note;
       return { text, kind: 'my-turn', badgeSeat: s.seat };
     }
     const waitText = mode === 'cpu' ? 'Computador pensando…' : 'Vez do adversário';
@@ -474,7 +635,15 @@
     btn.addEventListener('click', () => {
       difficulty = btn.dataset.difficulty;
       storageSet('hub.difficulty', difficulty);
-      renderDifficulty();
+      renderModeOptions();
+    })
+  );
+
+  el.cpuTypeButtons.forEach((btn) =>
+    btn.addEventListener('click', () => {
+      cpuType = btn.dataset.cpuType;
+      storageSet('hub.cpuType', cpuType);
+      renderModeOptions();
     })
   );
 
@@ -514,7 +683,8 @@
   // ---------------------------------------------------------------------------
 
   if (!DIFFICULTY_LABEL[difficulty]) difficulty = 'medium';
+  if (cpuType !== 'solo' && cpuType !== 'versus') cpuType = 'solo';
   renderHome();
-  renderDifficulty();
+  renderModeOptions();
   history.replaceState({ screen: 'home' }, '');
 })();

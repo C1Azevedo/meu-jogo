@@ -32,6 +32,13 @@
   --ck-white: #fafafa;
   --ck-black: #2b2b2b;
   --highlight: #22c55e;
+  --ms-hidden: #c7cde0;
+  --ms-hidden-hover: #b7bfd6;
+  --ms-open: #f8f9fd;
+  --ms-own0: #e0ecff;
+  --ms-own1: #ffeedd;
+  --ms-p0: #2563eb;
+  --ms-p1: #ea7a12;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -56,6 +63,11 @@
     --c4-hole: #12141c;
     --ck-light: #d9c39e;
     --ck-dark: #6e4630;
+    --ms-hidden: #3b4157;
+    --ms-hidden-hover: #485070;
+    --ms-open: #1a1d28;
+    --ms-own0: #1b2a4a;
+    --ms-own1: #3b2a18;
   }
 }
 
@@ -449,6 +461,89 @@ button, input { font: inherit; color: inherit; }
   box-shadow: 0 0 0 4px rgba(34, 197, 94, .3);
 }
 .ck-square.captured .ck-piece { opacity: .35; }
+
+/* ---------- Opções extras da tela de modo ---------- */
+
+.level-card { margin-bottom: 14px; }
+.level-card .segmented { margin-bottom: 0; }
+.segmented.two { grid-template-columns: repeat(2, 1fr); }
+.segmented button small { display: block; font-size: .72rem; font-weight: 500; color: var(--muted); }
+#cpu-type-field .segmented { margin-bottom: 12px; }
+#cpu-hint { margin-top: -4px; }
+
+/* ---------- Campo Minado ---------- */
+
+.ms-badge-0 { fill: var(--ms-p0); }
+.ms-badge-1 { fill: var(--ms-p1); }
+
+.ms-wrap { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.ms-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 14px; font-variant-numeric: tabular-nums; }
+.ms-stat { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; }
+.ms-stat .badge { width: 14px; height: 14px; }
+.ms-flag-toggle { min-height: 38px; padding: 6px 14px; }
+.ms-flag-toggle[aria-pressed="true"] { background: var(--danger-bg); border-color: var(--danger); }
+
+/* O tabuleiro difícil (30 colunas) rola na horizontal em telas pequenas. */
+.ms-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+.ms-grid {
+  /* largura útil (tela - margens - padding - espaços entre as casas) ÷ colunas */
+  --cell: clamp(19px, calc((min(100vw, 760px) - 32px - 12px - (var(--cols) - 1) * 2px) / var(--cols)), 36px);
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  grid-auto-rows: var(--cell);
+  gap: 2px;
+  width: max-content;
+  margin: 0 auto;
+  padding: 6px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+.ms-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  font-weight: 800;
+  font-size: calc(var(--cell) * .55);
+  line-height: 1;
+  background: var(--ms-open);
+  cursor: default;
+}
+.ms-cell.hidden, .ms-cell.flag { background: var(--ms-hidden); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .12); }
+.ms-grid.interactive .ms-cell.hidden { cursor: pointer; }
+.ms-grid.interactive .ms-cell.hidden:hover { background: var(--ms-hidden-hover); }
+.ms-cell.flag { font-size: calc(var(--cell) * .5); }
+.ms-cell.own0 { background: var(--ms-own0); }
+.ms-cell.own1 { background: var(--ms-own1); }
+.ms-cell.last { box-shadow: inset 0 0 0 2px var(--primary); }
+.ms-cell.mine { background: var(--danger-bg); font-size: calc(var(--cell) * .5); }
+.ms-cell.exploded { background: var(--danger); font-size: calc(var(--cell) * .5); }
+.ms-cell.found { background: var(--success-bg); }
+.ms-cell.wrong { background: var(--warning-bg); text-decoration: line-through; }
+.ms-cell.n1 { color: #2563eb; }
+.ms-cell.n2 { color: #16a34a; }
+.ms-cell.n3 { color: #dc2626; }
+.ms-cell.n4 { color: #7c3aed; }
+.ms-cell.n5 { color: #b45309; }
+.ms-cell.n6 { color: #0891b2; }
+.ms-cell.n7 { color: #374151; }
+.ms-cell.n8 { color: #6b7280; }
+@media (prefers-color-scheme: dark) {
+  .ms-cell.n1 { color: #60a5fa; }
+  .ms-cell.n2 { color: #4ade80; }
+  .ms-cell.n3 { color: #f87171; }
+  .ms-cell.n4 { color: #c4b5fd; }
+  .ms-cell.n7 { color: #e5e7eb; }
+  .ms-cell.n8 { color: #9ca3af; }
+}
+.ms-help { margin: 0; text-align: center; }
 
 @media (max-width: 420px) {
   .app { padding-left: 12px; padding-right: 12px; }

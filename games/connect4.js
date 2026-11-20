@@ -133,6 +133,6 @@
     evaluate,
     orderMoves,
     moveKey,
-    ai: { mediumDepth: 2, hardDepth: 9, timeLimitMs: 1500 },
+    ai: { mediumDepth: 2, hardDepth: 20, timeLimitMs: 1500 },
   };
 });
