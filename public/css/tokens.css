@@ -1,0 +1,177 @@
+/* ==========================================================================
+   Hub de Jogos — tokens de design (tema "Neon Miami", anos 80)
+   Todas as cores, fontes, sombras e brilhos do app ficam aqui.
+   Os outros arquivos CSS só usam estas variáveis.
+   ========================================================================== */
+
+/* Fontes hospedadas localmente (licença SIL OFL, ver public/fonts/LICENSE-*.txt).
+   Nada vem de CDN: o app funciona offline. */
+@font-face {
+  font-family: "Anton";
+  src: url("../fonts/anton-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/inter-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/inter-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/inter-800.woff2") format("woff2");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* ---- Paleta base ---- */
+  --neon-pink: #FF1493;
+  --magenta: #D900FF;
+  --deep-purple: #18082E;
+  --purple-2: #32105C;
+  --neon-cyan: #00E5E5;
+  --orange: #FF8C42;
+  --gold: #FFD166;
+  --white: #FFFFFF;
+
+  /* Tons derivados */
+  --purple-3: #4A1A80;
+  --purple-ink: #0D0320;
+  --lilac: #C9B6E8;
+  --pink-soft: #FFD3EC;
+  --neon-green: #39F5A1;
+  --neon-red: #FF3B6B;
+
+  /* ---- Cores semânticas (usadas por todo o app) ---- */
+  --bg: var(--deep-purple);
+  --surface: rgba(36, 12, 70, .78);
+  --surface-solid: #220C42;
+  --surface-2: rgba(255, 255, 255, .07);
+  --surface-3: rgba(255, 255, 255, .12);
+  --text: var(--white);
+  --muted: var(--lilac);
+  --border: rgba(255, 255, 255, .14);
+  --border-strong: rgba(255, 255, 255, .28);
+  --primary: var(--neon-pink);
+  --primary-hover: #FF3AA8;
+  --primary-text: var(--white);
+  --accent: var(--neon-cyan);
+  --success: var(--neon-green);
+  --success-bg: rgba(57, 245, 161, .14);
+  --danger: var(--neon-red);
+  --danger-bg: rgba(255, 59, 107, .16);
+  --warning: var(--gold);
+  --warning-bg: rgba(255, 209, 102, .14);
+  --highlight: var(--neon-cyan);
+  --overlay: rgba(13, 3, 32, .72);
+  --scrim: rgba(0, 0, 0, .55);
+
+  /* Dificuldades */
+  --easy: var(--neon-green);
+  --medium: var(--gold);
+  --hard: var(--neon-red);
+
+  /* ---- Gradientes ---- */
+  --gradient-title: linear-gradient(100deg, var(--neon-pink) 0%, var(--magenta) 48%, var(--white) 100%);
+  --gradient-pink: linear-gradient(135deg, var(--neon-pink), var(--magenta));
+  --gradient-cyan: linear-gradient(135deg, var(--neon-cyan), #2F8CFF);
+  --gradient-gold: linear-gradient(135deg, var(--gold), var(--orange));
+  --gradient-panel: linear-gradient(160deg, rgba(50, 16, 92, .86), rgba(24, 8, 46, .9));
+
+  /* Céu do cenário (pôr do sol) */
+  --sky-1: var(--deep-purple);
+  --sky-2: var(--purple-2);
+  --sky-3: #7A1B8F;
+  --sky-4: var(--neon-pink);
+  --sky-5: var(--orange);
+  --sun-1: var(--gold);
+  --sun-2: var(--orange);
+  --sun-3: var(--neon-pink);
+  --skyline: #1E0A3A;
+  --skyline-far: #3A1462;
+  --palm: var(--purple-ink);
+  --water-1: #2A0D4E;
+  --water-2: var(--purple-ink);
+
+  /* ---- Brilhos e sombras ---- */
+  --glow-pink: 0 0 6px rgba(255, 20, 147, .9), 0 0 22px rgba(255, 20, 147, .55);
+  --glow-cyan: 0 0 6px rgba(0, 229, 229, .9), 0 0 22px rgba(0, 229, 229, .5);
+  --glow-gold: 0 0 6px rgba(255, 209, 102, .85), 0 0 20px rgba(255, 140, 66, .45);
+  --glow-magenta: 0 0 6px rgba(217, 0, 255, .85), 0 0 22px rgba(217, 0, 255, .5);
+  --shadow: 0 10px 30px rgba(5, 0, 18, .55);
+  --shadow-deep: 0 24px 60px rgba(5, 0, 18, .7);
+  --text-glow-pink: 0 0 10px rgba(255, 20, 147, .7);
+  --text-glow-cyan: 0 0 10px rgba(0, 229, 229, .7);
+
+  /* ---- Tipografia ---- */
+  --font-display: "Anton", "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Inter", "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* ---- Formas e movimento ---- */
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --t-fast: .15s;
+  --t: .25s;
+
+  /* ---- Tabuleiros (legibilidade acima de tudo) ---- */
+  /* Jogo da Velha */
+  --x-color: var(--neon-cyan);
+  --o-color: var(--neon-pink);
+  /* Ligue 4 */
+  --c4-board: #2B0F57;
+  --c4-board-edge: var(--magenta);
+  --c4-hole: #0F0424;
+  --c4-red: #FF2D6F;
+  --c4-yellow: var(--gold);
+  /* Damas */
+  --ck-light: #F6D3E8;
+  --ck-dark: #4A1A80;
+  --ck-white: #FFF8FC;
+  --ck-white-edge: #C9A3C0;
+  --ck-black: #1A0B2E;
+  --ck-black-edge: var(--neon-cyan);
+  /* Xadrez: rosa claro e roxo, peças sempre legíveis */
+  --cs-light: #F9DCEB;
+  --cs-dark: #9C6BC9;
+  --cs-white-piece: #FFFFFF;
+  --cs-white-stroke: #2A0F45;
+  --cs-black-piece: #1B0A2E;
+  --cs-black-stroke: #000000;
+  --cs-last: rgba(255, 209, 102, .55);
+  --cs-selected: rgba(0, 229, 229, .45);
+  --cs-hint: rgba(24, 8, 46, .45);
+  --cs-check: var(--neon-red);
+  /* Campo Minado */
+  --ms-hidden: #5B2A92;
+  --ms-hidden-hover: #6E36AD;
+  --ms-hidden-edge: #7D46C2;
+  --ms-open: #1C0937;
+  --ms-own0: #0F3346;
+  --ms-own1: #4A2410;
+  --ms-p0: var(--neon-cyan);
+  --ms-p1: var(--orange);
+  --ms-n1: #4FC3FF;
+  --ms-n2: var(--neon-green);
+  --ms-n3: #FF5C8A;
+  --ms-n4: #C792FF;
+  --ms-n5: var(--orange);
+  --ms-n6: var(--neon-cyan);
+  --ms-n7: var(--white);
+  --ms-n8: var(--lilac);
+}

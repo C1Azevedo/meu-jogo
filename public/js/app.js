@@ -16,7 +16,7 @@
 
   const Games = window.Games;
   const UI = window.UI;
-  const GAME_ORDER = ['tictactoe', 'connect4', 'checkers', 'minesweeper', 'chess'].filter((id) => Games[id] && UI.views[id]);
+  const GAME_ORDER = ['tictactoe', 'connect4', 'checkers', 'chess', 'minesweeper'].filter((id) => Games[id] && UI.views[id]);
   const CPU_DELAY_MS = 450;
   const DIFFICULTY_LABEL = { easy: 'Fácil', medium: 'Médio', hard: 'Difícil' };
 
@@ -92,6 +92,7 @@
 
   function showScreen(name, { push = true } = {}) {
     currentScreen = name;
+    document.body.dataset.screen = name; // o CSS escurece o cenário nas telas de partida
     for (const [key, node] of Object.entries(el.screens)) node.classList.toggle('active', key === name);
     window.scrollTo(0, 0);
     if (push) history.pushState({ screen: name }, '');
@@ -109,15 +110,22 @@
 
   function renderHome() {
     el.gameList.innerHTML = '';
-    for (const id of GAME_ORDER) {
+    GAME_ORDER.forEach((id, i) => {
       const view = UI.views[id];
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'game-card';
-      card.innerHTML = `${view.icon}<h3>${Games[id].name}</h3><p>${view.description}</p>`;
+      card.dataset.game = id;
+      card.style.setProperty('--i', i); // atraso da animação de entrada
+      card.setAttribute('aria-label', `Jogar ${Games[id].name}`);
+      card.innerHTML =
+        `<span class="game-card-art">${view.icon}</span>` +
+        `<span class="game-card-body"><span class="game-card-title">${Games[id].name}</span>` +
+        `<span class="game-card-desc">${view.description}</span></span>` +
+        '<span class="game-card-play" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 2l10 6-10 6z"/></svg>Jogar</span>';
       card.addEventListener('click', () => openMode(id));
       el.gameList.appendChild(card);
-    }
+    });
   }
 
   function openMode(gameId) {
