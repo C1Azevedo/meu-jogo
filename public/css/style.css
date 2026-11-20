@@ -81,7 +81,9 @@ body[data-screen="game"] .scene::after { background: var(--overlay); }
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: .02em;
-  line-height: .95;
+  line-height: 1;
+  /* folga: com background-clip:text, o que sai da caixa do elemento fica invisível */
+  padding: .08em .04em .04em;
   margin: 0;
   background: var(--gradient-title);
   -webkit-background-clip: text;
@@ -651,11 +653,60 @@ body[data-screen="game"] .scene::after { background: var(--overlay); }
   z-index: 10;
 }
 
-/* No celular, "Sair da partida" vira só o ícone para o título caber */
+/* ---------- Layout da partida ---------- */
+
+/* Altura disponível para o tabuleiro (os tabuleiros usam como limite) */
+#screen-game { --stage-h: calc(100dvh - 300px); }
+
+/* Telas largas na horizontal (notebook/desktop/tablet deitado): placar e
+   status numa coluna lateral, tabuleiro grande ao lado. */
+@media (min-width: 700px) and (orientation: landscape) {
+  #screen-game.active {
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    grid-template-rows: auto auto auto 1fr;
+    grid-template-areas:
+      "top top"
+      "score board"
+      "status board"
+      "actions board";
+    column-gap: 28px;
+    align-items: start;
+    --stage-h: calc(100dvh - 130px);
+  }
+  #screen-game > .topbar { grid-area: top; }
+  #screen-game > .scoreboard { grid-area: score; margin: 14px 0 14px; grid-template-columns: 1fr; gap: 4px; padding: 20px 14px 12px; }
+  #screen-game .score-draws { border: 0; border-top: 1px dashed rgba(255, 209, 102, .35); border-bottom: 1px dashed rgba(255, 209, 102, .35); padding: 6px 0; }
+  #screen-game .score { flex-direction: row; justify-content: space-between; padding: 6px 12px; }
+  #screen-game > .status { grid-area: status; border-radius: var(--radius); margin: 0 0 14px; min-height: 64px; }
+  #screen-game > .board-wrap { grid-area: board; align-self: start; }
+  #screen-game > .game-actions { grid-area: actions; margin-top: 0; flex-direction: column; }
+  #screen-game > .game-actions .btn { width: 100%; }
+}
+
+@media (max-width: 360px) {
+  .score-label { font-size: .6rem; letter-spacing: .02em; }
+}
+
+/* Celular deitado: pouca altura, compacta topo e placar */
+@media (orientation: landscape) and (max-height: 500px) {
+  .topbar { margin-bottom: 8px; }
+  .topbar-title { font-size: 1.6rem; }
+  #screen-game.active { --stage-h: calc(100dvh - 90px); }
+  #screen-game > .scoreboard { padding: 14px 10px 6px; }
+  #screen-game .score strong { font-size: 1.5rem; }
+}
+
+/* Celular em pé: título se ajusta entre os botões e o tabuleiro usa a largura toda */
 @media (max-width: 520px) {
   .btn-exit span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .btn-exit { padding: 10px; min-width: 46px; }
-  #screen-game .topbar-title { font-size: 1.6rem; }
+  .topbar { grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px; }
+  .topbar-title { font-size: clamp(1.3rem, 7.4vw, 1.9rem); overflow-wrap: anywhere; }
+  .badge-soft:not(:empty) { font-size: .66rem; padding: 4px 9px; letter-spacing: .05em; }
+  #screen-game .cs-wrap, #screen-game .ck-board { width: 100%; }
+  #screen-game > .scoreboard { padding: 14px 10px 6px; margin-bottom: 12px; }
+  #screen-game > .status { min-height: 46px; margin-bottom: 12px; }
 }
 
 @media (max-width: 420px) {

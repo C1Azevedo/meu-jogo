@@ -23,7 +23,8 @@
    Xadrez
    ====================================================================== */
 
-.cs-wrap { width: min(100%, 560px); display: flex; flex-direction: column; gap: 10px; }
+/* Largura limitada também pela altura disponível (o tabuleiro + os dois painéis cabem na tela) */
+.cs-wrap { width: min(100%, 600px, max(300px, calc(var(--stage-h) - 120px))); display: flex; flex-direction: column; gap: 10px; }
 
 /* Painéis dos jogadores (acima e abaixo do tabuleiro) */
 .cs-side {
@@ -161,7 +162,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  width: min(100%, 400px);
+  width: min(100%, 440px, max(260px, var(--stage-h)));
   aspect-ratio: 1;
   padding: 8px;
   border-radius: 20px;
@@ -201,7 +202,7 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0;
-  width: min(100%, 500px);
+  width: min(100%, 540px, max(280px, calc(var(--stage-h) * 7 / 6)));
   padding: 8px;
   background: var(--c4-board);
   border-radius: 20px;
@@ -260,7 +261,7 @@
   --frame-glow: rgba(255, 20, 147, .45);
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  width: min(100%, 560px);
+  width: min(100%, 600px, max(300px, var(--stage-h)));
   aspect-ratio: 1;
   border-radius: 12px;
   overflow: hidden;
@@ -337,7 +338,9 @@
   --frame: var(--orange);
   --frame-glow: rgba(255, 140, 66, .4);
   /* largura útil (tela - margens - moldura - espaços entre as casas) ÷ colunas */
-  --cell: clamp(19px, calc((min(100vw, 760px) - 32px - 20px - (var(--cols) - 1) * 2px) / var(--cols)), 38px);
+  --fit-w: calc((min(100vw, 760px) - 32px - 20px - (var(--cols) - 1) * 2px) / var(--cols));
+  --fit-h: calc((var(--stage-h) - 70px - (var(--rows, 9) - 1) * 2px) / var(--rows, 9));
+  --cell: clamp(19px, min(var(--fit-w), var(--fit-h)), 38px);
   display: grid;
   grid-template-columns: repeat(var(--cols), var(--cell));
   grid-auto-rows: var(--cell);
@@ -388,3 +391,8 @@
 .ms-cell.n7 { color: var(--ms-n7); }
 .ms-cell.n8 { color: var(--ms-n8); }
 .ms-help { margin: 0; text-align: center; }
+
+/* Telas de toque: casas de pelo menos 26 px (o tabuleiro rola na horizontal se precisar) */
+@media (pointer: coarse) {
+  .ms-grid { --cell: clamp(26px, min(var(--fit-w), var(--fit-h)), 40px); }
+}

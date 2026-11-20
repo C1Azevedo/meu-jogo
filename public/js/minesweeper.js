@@ -57,6 +57,7 @@
       function build(state) {
         grid.innerHTML = '';
         grid.style.setProperty('--cols', state.cols);
+        grid.style.setProperty('--rows', state.rows);
         cells = [];
         for (let i = 0; i < state.cells.length; i++) {
           const cell = document.createElement('button');
