@@ -136,3 +136,25 @@ test('sair da sala avisa o adversário', async () => {
   a.close();
   b.close();
 });
+
+test('Ligue 4 online: servidor valida coluna e detecta vitória', async () => {
+  const { a, b } = await setupRoom('connect4');
+  // Coluna inexistente / formato errado
+  for (const bad of [7, -1, '3a', [3]]) {
+    assert.strictEqual((await emit(a, 'game:move', { move: bad })).ok, false, JSON.stringify(bad));
+  }
+  const seq = [[a, 0], [b, 0], [a, 1], [b, 1], [a, 2], [b, 2]];
+  for (const [c, m] of seq) {
+    const upd = once(b, 'game:state');
+    assert.ok((await emit(c, 'game:move', { move: m })).ok);
+    await upd;
+  }
+  const fin = once(b, 'game:state');
+  await emit(a, 'game:move', { move: 3 });
+  const { state, scores } = await fin;
+  assert.strictEqual(state.winner, 0);
+  assert.strictEqual(state.winLine.length, 4);
+  assert.deepStrictEqual(scores, { me: 0, opponent: 1, draws: 0 });
+  a.close();
+  b.close();
+});

@@ -13,6 +13,7 @@ const { Server } = require('socket.io');
 
 const GAMES = {
   tictactoe: require('./games/tictactoe'),
+  connect4: require('./games/connect4'),
 };
 
 const app = express();

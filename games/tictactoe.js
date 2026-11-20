@@ -69,8 +69,9 @@
     return score;
   }
 
+  /** Chave única da jogada; null para qualquer coisa que não seja um inteiro. */
   function moveKey(move) {
-    return String(move);
+    return Number.isInteger(move) ? String(move) : null;
   }
 
   return {
