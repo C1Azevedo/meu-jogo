@@ -1,19 +1,18 @@
 /* ==========================================================================
-   Hub de Jogos — tabuleiros e peças de cada jogo (tema neon)
+   Hub de Jogos — tabuleiros e peças de cada jogo
    Cores: tokens.css. Regra de ouro: o tabuleiro é sempre opaco e
-   legível; o brilho neon fica na moldura, nunca dentro das casas.
+   legível. A moldura é preta e grossa, como as calhas dos cartazes.
    ========================================================================== */
 
-/* Moldura neon compartilhada por todos os tabuleiros */
+/* Moldura preta compartilhada por todos os tabuleiros (5px: o Campo Minado conta com ela) */
 .ttt-board,
 .c4-board,
 .ck-board,
 .cs-board,
 .ms-grid {
-  --frame: var(--magenta);
-  --frame-glow: rgba(217, 0, 255, .45);
-  border: 3px solid var(--frame);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .08) inset, 0 0 18px var(--frame-glow), 0 0 46px rgba(217, 0, 255, .18), var(--shadow-deep);
+  border: 5px solid var(--ink);
+  border-radius: var(--radius) !important;
+  box-shadow: var(--hard-lg), var(--shadow-deep);
   animation: board-in .4s var(--ease-out) both;
 }
 @keyframes board-in { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
@@ -34,25 +33,27 @@
   gap: 10px;
   min-height: 46px;
   padding: 8px 14px;
-  border-radius: 14px;
-  background: var(--surface-solid);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-left: 6px solid var(--border-strong);
+  box-shadow: var(--hard-sm);
   font-size: .92rem;
   transition: border-color var(--t), box-shadow var(--t);
 }
-.cs-side:has(.cs-name.active) { border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); }
+.cs-side:has(.cs-name.active) { border-left-color: var(--lagoon); }
 .cs-name { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--muted); white-space: nowrap; min-width: 0; }
 .cs-name.active { color: var(--white); }
 .cs-name.active::after {
-  content: "VEZ";
+  content: "Vez";
   margin-left: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--neon-cyan);
-  color: var(--deep-purple);
-  font-size: .66rem;
+  padding: 1px 8px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--lagoon);
+  color: var(--ink);
+  font-size: .74rem;
   font-weight: 800;
-  letter-spacing: .12em;
 }
 .cs-name .badge { width: 16px; height: 16px; }
 .cs-captured { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; min-width: 0; min-height: 24px; }
@@ -129,12 +130,11 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: var(--overlay);
-  border-radius: 12px;
+  background: rgba(10, 4, 20, .86);
   z-index: 3;
   animation: panel-open .2s var(--ease-out);
 }
-.cs-promo p { margin: 0; font-family: var(--font-display); font-size: 1.6rem; letter-spacing: .04em; text-transform: uppercase; color: var(--white); text-shadow: var(--text-glow-pink); }
+.cs-promo p { margin: 0; font-family: var(--font-display); font-size: 1.6rem; letter-spacing: .04em; text-transform: uppercase; color: var(--white); text-shadow: var(--text-outline), 3px 4px 0 var(--ink); }
 .cs-promo-options { display: flex; gap: 10px; }
 .cs-promo-btn {
   width: 66px;
@@ -142,11 +142,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--neon-pink);
-  border-radius: 14px;
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
   background: var(--cs-light);
   cursor: pointer;
-  box-shadow: var(--glow-pink);
+  box-shadow: var(--hard);
   transition: transform var(--t-fast), background var(--t);
 }
 .cs-promo-btn:hover, .cs-promo-btn:focus-visible { background: var(--white); transform: translateY(-3px); outline: none; }
@@ -157,8 +157,6 @@
    ====================================================================== */
 
 .ttt-board {
-  --frame: var(--neon-cyan);
-  --frame-glow: rgba(0, 229, 229, .4);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
@@ -166,28 +164,29 @@
   aspect-ratio: 1;
   padding: 8px;
   border-radius: 20px;
-  background: var(--purple-ink);
+  background: var(--ink);
 }
 .ttt-cell {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16%;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface-solid);
+  border: 2px solid rgba(255, 255, 255, .12);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, #34194F, #26123B);
   cursor: pointer;
   transition: background var(--t), border-color var(--t), box-shadow var(--t);
 }
 .ttt-cell:disabled { cursor: default; }
-.ttt-cell:not(:disabled):hover { background: var(--purple-2); border-color: var(--neon-pink); box-shadow: inset 0 0 18px rgba(255, 20, 147, .25); }
-.ttt-cell:focus-visible { outline: 3px solid var(--neon-cyan); outline-offset: -3px; }
-.ttt-cell.win { background: rgba(255, 209, 102, .16); border-color: var(--gold); box-shadow: 0 0 18px rgba(255, 209, 102, .45); }
+.ttt-cell:not(:disabled):hover { background: #43215F; border-color: var(--sunbeam); }
+.ttt-cell:focus-visible { outline: 3px solid var(--sunbeam); outline-offset: -3px; }
+.ttt-cell.win { background: var(--sunbeam); border-color: var(--ink); }
+.ttt-cell.win .mark-x, .ttt-cell.win .mark-o { stroke: var(--ink); filter: none; }
 .ttt-cell svg { width: 100%; height: 100%; overflow: visible; }
 .ttt-cell.last svg { animation: pop .2s ease-out; }
 
-.mark-x { stroke: var(--x-color); stroke-width: 13; stroke-linecap: round; fill: none; filter: drop-shadow(0 0 6px var(--x-color)); }
-.mark-o { stroke: var(--o-color); stroke-width: 12; fill: none; filter: drop-shadow(0 0 6px var(--o-color)); }
+.mark-x { stroke: var(--x-color); stroke-width: 13; stroke-linecap: round; fill: none; filter: drop-shadow(3px 3px 0 var(--ink)); }
+.mark-o { stroke: var(--o-color); stroke-width: 12; fill: none; filter: drop-shadow(3px 3px 0 var(--ink)); }
 .status .mark-x, .status .mark-o { filter: none; }
 
 /* ======================================================================
@@ -198,7 +197,6 @@
 .c4-fill-1 { fill: var(--c4-yellow); }
 
 .c4-board {
-  --frame: var(--c4-board-edge);
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0;
@@ -257,8 +255,6 @@
 .ck-badge-1 { fill: var(--ck-black); stroke: var(--ck-black-edge); stroke-width: 1.4; }
 
 .ck-board {
-  --frame: var(--neon-pink);
-  --frame-glow: rgba(255, 20, 147, .45);
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   width: min(100%, 600px, max(300px, var(--stage-h)));
@@ -292,7 +288,7 @@
   background: radial-gradient(circle at 35% 30%, var(--purple-3), var(--ck-black) 55%, var(--purple-ink));
   box-shadow: 0 0 0 2px var(--ck-black-edge), 0 4px 8px rgba(0, 0, 0, .55), inset 0 0 0 4px rgba(255, 255, 255, .06);
 }
-.ck-crown { width: 58%; height: 58%; fill: var(--gold); filter: drop-shadow(0 0 3px rgba(255, 140, 66, .8)); }
+.ck-crown { width: 58%; height: 58%; fill: var(--gold); filter: drop-shadow(1px 1px 0 var(--ink)); }
 .ck-board.interactive .ck-square.movable .ck-piece { box-shadow: 0 0 0 3px var(--neon-cyan), 0 0 12px var(--neon-cyan), 0 4px 8px rgba(0, 0, 0, .45); }
 .ck-square.selected .ck-piece { transform: scale(1.1); box-shadow: 0 0 0 4px var(--gold), 0 0 18px var(--gold), 0 6px 12px rgba(0, 0, 0, .5) !important; }
 .ck-square.target::after {
@@ -322,21 +318,20 @@
   gap: 6px;
   min-height: 40px;
   padding: 6px 14px;
-  background: var(--surface-solid);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--hard-sm);
 }
 .ms-stat strong { color: var(--gold); font-weight: 800; }
 .ms-stat .badge { width: 14px; height: 14px; }
 .ms-versus strong { color: var(--white); }
 .ms-flag-toggle { min-height: 40px; padding: 6px 16px; }
-.ms-flag-toggle[aria-pressed="true"] { background: rgba(255, 20, 147, .2); border-color: var(--neon-pink); box-shadow: var(--glow-pink); }
+.ms-flag-toggle[aria-pressed="true"] { background: var(--flamingo); color: var(--ink); }
 
 /* O tabuleiro difícil (30 colunas) rola na horizontal em telas pequenas. */
 .ms-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 6px 4px 8px; }
 .ms-grid {
-  --frame: var(--orange);
-  --frame-glow: rgba(255, 140, 66, .4);
   /* largura útil (tela - margens - moldura - espaços entre as casas) ÷ colunas */
   --fit-w: calc((min(100vw, 760px) - 32px - 20px - (var(--cols) - 1) * 2px) / var(--cols));
   --fit-h: calc((var(--stage-h) - 70px - (var(--rows, 9) - 1) * 2px) / var(--rows, 9));
@@ -348,8 +343,7 @@
   width: max-content;
   margin: 0 auto;
   padding: 5px;
-  background: var(--purple-ink);
-  border-radius: 12px;
+  background: var(--ink);
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -437,17 +431,18 @@ body[data-screen="coop"] .app { padding: 0; max-width: none; }
   gap: 5px;
   min-height: 32px;
   padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(24, 8, 46, .72);
-  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: var(--radius-sm);
+  background: rgba(10, 4, 20, .72);
+  border: 2px solid var(--ink);
   color: var(--white);
   font-weight: 800;
   font-size: .85rem;
   font-variant-numeric: tabular-nums;
   backdrop-filter: blur(2px);
 }
-.coop-stat svg { width: 16px; height: 16px; color: var(--neon-cyan); }
-.coop-stat.low { border-color: var(--neon-red); color: var(--neon-red); animation: turn-pulse 1s ease-in-out infinite; }
+.coop-stat svg { width: 16px; height: 16px; color: var(--lagoon); }
+.coop-stat.low { background: var(--neon-red); color: var(--white); animation: low-time 1s ease-in-out infinite alternate; }
+@keyframes low-time { to { filter: brightness(1.25); } }
 .coop-level { color: var(--gold); }
 .coop-right { display: flex; align-items: center; gap: 6px; }
 .coop-ping { font-size: .75rem; color: var(--muted); }
@@ -459,14 +454,14 @@ body[data-screen="coop"] .app { padding: 0; max-width: none; }
   height: 40px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, .3);
-  background: rgba(24, 8, 46, .72);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--ink);
+  background: rgba(10, 4, 20, .72);
   color: var(--white);
   cursor: pointer;
 }
 .coop-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.coop-btn:focus-visible { outline: 3px solid var(--neon-cyan); }
+.coop-btn:focus-visible { outline: 3px solid var(--sunbeam); }
 #coop-mute .snd-off, #coop-mute[aria-pressed="true"] .snd-on { display: none; }
 #coop-mute[aria-pressed="true"] .snd-off { display: block; }
 
@@ -483,8 +478,8 @@ body[data-screen="coop"] .app { padding: 0; max-width: none; }
   align-items: center;
   gap: 5px;
   padding: 2px 9px;
-  border-radius: 999px;
-  background: rgba(24, 8, 46, .6);
+  border-radius: var(--radius-sm);
+  background: rgba(10, 4, 20, .6);
   color: var(--white);
   font-size: .72rem;
   font-weight: 800;
@@ -516,25 +511,25 @@ body[data-screen="coop"] .app { padding: 0; max-width: none; }
   width: clamp(76px, 15vmin, 108px);
   height: clamp(76px, 15vmin, 108px);
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, .55);
-  background: rgba(24, 8, 46, .38);
+  border: 3px solid rgba(255, 244, 230, .7);
+  background: rgba(10, 4, 20, .38);
   color: var(--white);
   touch-action: none;
   transition: transform .06s, background .06s;
 }
 .coop-touch button svg { width: 46%; height: 46%; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-.coop-touch button.pressed { background: rgba(0, 229, 229, .45); border-color: var(--neon-cyan); transform: scale(.94); }
+.coop-touch button.pressed { background: rgba(34, 199, 196, .5); border-color: var(--lagoon); transform: scale(.94); }
 .coop-jump {
   position: absolute;
   right: max(18px, env(safe-area-inset-right));
   bottom: max(18px, env(safe-area-inset-bottom));
   width: clamp(92px, 19vmin, 128px) !important;
   height: clamp(92px, 19vmin, 128px) !important;
-  background: rgba(255, 20, 147, .35) !important;
-  border-color: rgba(255, 140, 200, .8) !important;
+  background: rgba(255, 79, 154, .38) !important;
+  border-color: rgba(255, 170, 205, .85) !important;
 }
-.coop-jump span { position: absolute; bottom: 14%; font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; pointer-events: none; }
-.coop-jump.pressed { background: rgba(255, 20, 147, .7) !important; }
+.coop-jump span { position: absolute; bottom: 14%; font-size: .74rem; font-weight: 800; pointer-events: none; }
+.coop-jump.pressed { background: rgba(255, 79, 154, .72) !important; }
 
 /* Avisos (pausa, reconexão, fim de jogo, vitória) */
 .coop-overlay {
@@ -543,25 +538,27 @@ body[data-screen="coop"] .app { padding: 0; max-width: none; }
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(13, 3, 32, .72);
+  background: rgba(20, 8, 34, .74);
   z-index: 3;
 }
 .coop-card {
   width: min(100%, 440px);
   padding: 22px;
-  border-radius: var(--radius-lg);
+  --strip: var(--flamingo);
+  border-radius: var(--radius);
   /* opaco: nada do jogo pode aparecer atrás do texto */
-  background: linear-gradient(160deg, var(--purple-2), var(--deep-purple));
-  border: 2px solid var(--neon-pink);
-  box-shadow: var(--glow-pink), var(--shadow-deep);
+  background: var(--surface-solid);
+  border: 2px solid var(--ink);
+  border-top: 6px solid var(--strip);
+  box-shadow: var(--hard-lg), var(--shadow-deep);
   text-align: center;
   animation: panel-open .25s var(--ease-out);
 }
 .coop-card h2 { font-size: clamp(1.6rem, 6vmin, 2.4rem); }
-.coop-card p { margin: 10px 0 16px; color: var(--pink-soft); font-weight: 600; }
+.coop-card p { margin: 10px 0 16px; color: var(--sand); font-weight: 600; }
 .coop-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.coop-overlay[data-kind="pause"] .coop-card, .coop-overlay[data-kind="conn"] .coop-card { border-color: var(--gold); box-shadow: var(--glow-gold), var(--shadow-deep); }
-.coop-overlay[data-kind="victory"] .coop-card { border-color: var(--neon-green); }
+.coop-overlay[data-kind="pause"] .coop-card, .coop-overlay[data-kind="conn"] .coop-card { --strip: var(--sunbeam); }
+.coop-overlay[data-kind="victory"] .coop-card { --strip: var(--cash); }
 
 /* Celular na vertical: pede para girar */
 .coop-rotate { display: none; }

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Hub de Jogos — tokens de design (tema "Neon Miami", anos 80)
+   Hub de Jogos — tokens de design (tema "cartaz ao pôr do sol" na costa)
    Todas as cores, fontes, sombras e brilhos do app ficam aqui.
    Os outros arquivos CSS só usam estas variáveis.
    ========================================================================== */
@@ -38,93 +38,119 @@
 :root {
   color-scheme: dark;
 
-  /* ---- Paleta base ---- */
-  --neon-pink: #FF1493;
-  --magenta: #D900FF;
-  --deep-purple: #18082E;
-  --purple-2: #32105C;
-  --neon-cyan: #00E5E5;
-  --orange: #FF8C42;
-  --gold: #FFD166;
+  /* ---- Paleta base: fim de tarde na costa (cartaz de outdoor) ---- */
+  --ink: #000000;          /* calhas pretas do mosaico e sombras duras */
+  --dusk: #2B1450;         /* céu alto / fundo */
+  --flamingo: #FF4F9A;     /* rosa principal */
+  --tangerine: #FF8A3D;    /* laranja do pôr do sol */
+  --sunbeam: #FFD27A;      /* luz dourada */
+  --lagoon: #22C7C4;       /* mar azul-turquesa */
+  --sand: #FFF4E6;         /* texto claro, areia */
+  --cash: #7CDB6A;         /* verde de placar */
+
+  /* Nomes antigos, usados pelos tabuleiros e ícones: apontam para a nova paleta */
+  --neon-pink: var(--flamingo);
+  --magenta: #B44CFF;
+  --deep-purple: var(--dusk);
+  --purple-2: #4A1F6B;
+  --neon-cyan: var(--lagoon);
+  --orange: var(--tangerine);
+  --gold: var(--sunbeam);
   --white: #FFFFFF;
 
   /* Tons derivados */
-  --purple-3: #4A1A80;
-  --purple-ink: #0D0320;
-  --lilac: #C9B6E8;
-  --pink-soft: #FFD3EC;
-  --neon-green: #39F5A1;
-  --neon-red: #FF3B6B;
+  --purple-3: #6B2C86;
+  --purple-ink: #1A0A2E;
+  --lilac: #E7D3E2;
+  --pink-soft: #FFD9E8;
+  --neon-green: var(--cash);
+  --neon-red: #FF3D5E;
 
   /* ---- Cores semânticas (usadas por todo o app) ---- */
-  --bg: var(--deep-purple);
-  --surface: rgba(36, 12, 70, .78);
-  --surface-solid: #220C42;
-  --surface-2: rgba(255, 255, 255, .07);
-  --surface-3: rgba(255, 255, 255, .12);
-  --text: var(--white);
+  --bg: var(--dusk);
+  --surface: rgba(14, 6, 24, .84);
+  --surface-solid: #170A27;
+  --surface-2: rgba(255, 255, 255, .08);
+  --surface-3: rgba(255, 255, 255, .14);
+  --text: var(--sand);
   --muted: var(--lilac);
-  --border: rgba(255, 255, 255, .14);
-  --border-strong: rgba(255, 255, 255, .28);
-  --primary: var(--neon-pink);
-  --primary-hover: #FF3AA8;
-  --primary-text: var(--white);
-  --accent: var(--neon-cyan);
-  --success: var(--neon-green);
-  --success-bg: rgba(57, 245, 161, .14);
+  --border: rgba(255, 255, 255, .16);
+  --border-strong: rgba(255, 255, 255, .32);
+  --primary: var(--flamingo);
+  --primary-hover: #FF6AAB;
+  --primary-text: var(--ink);
+  --accent: var(--lagoon);
+  --success: var(--cash);
+  --success-bg: rgba(124, 219, 106, .16);
   --danger: var(--neon-red);
-  --danger-bg: rgba(255, 59, 107, .16);
-  --warning: var(--gold);
-  --warning-bg: rgba(255, 209, 102, .14);
-  --highlight: var(--neon-cyan);
-  --overlay: rgba(13, 3, 32, .86);
+  --danger-bg: rgba(255, 61, 94, .18);
+  --warning: var(--sunbeam);
+  --warning-bg: rgba(255, 210, 122, .16);
+  --highlight: var(--lagoon);
+  --overlay: rgba(20, 8, 34, .78);
   --scrim: rgba(0, 0, 0, .55);
 
   /* Dificuldades */
-  --easy: var(--neon-green);
-  --medium: var(--gold);
+  --easy: var(--cash);
+  --medium: var(--sunbeam);
   --hard: var(--neon-red);
 
   /* ---- Gradientes ---- */
-  --gradient-title: linear-gradient(100deg, var(--neon-pink) 0%, var(--magenta) 48%, var(--white) 100%);
-  --gradient-pink: linear-gradient(135deg, var(--neon-pink), var(--magenta));
-  --gradient-cyan: linear-gradient(135deg, var(--neon-cyan), #2F8CFF);
-  --gradient-gold: linear-gradient(135deg, var(--gold), var(--orange));
-  --gradient-panel: linear-gradient(160deg, rgba(50, 16, 92, .86), rgba(24, 8, 46, .9));
+  /* Letreiro: o pôr do sol "pintado" dentro das letras */
+  --gradient-title: linear-gradient(180deg, var(--sunbeam) 8%, var(--tangerine) 48%, var(--flamingo) 78%, #C2338F 100%);
+  --gradient-pink: linear-gradient(180deg, #FF6AAB, var(--flamingo));
+  --gradient-cyan: linear-gradient(180deg, #4FDCD8, var(--lagoon));
+  --gradient-gold: linear-gradient(180deg, var(--sunbeam), var(--tangerine));
+  --gradient-panel: linear-gradient(180deg, rgba(22, 9, 38, .9), rgba(12, 5, 22, .92));
 
-  /* Céu do cenário (pôr do sol) */
-  --sky-1: var(--deep-purple);
-  --sky-2: var(--purple-2);
-  --sky-3: #7A1B8F;
-  --sky-4: var(--neon-pink);
-  --sky-5: var(--orange);
-  --sun-1: var(--gold);
-  --sun-2: var(--orange);
-  --sun-3: var(--neon-pink);
-  --skyline: #1E0A3A;
-  --skyline-far: #3A1462;
-  --palm: var(--purple-ink);
-  --water-1: #2A0D4E;
-  --water-2: var(--purple-ink);
+  /* Cenário: céu de fim de tarde, nuvens iluminadas, mar */
+  --sky-1: #26104A;
+  --sky-2: #57206F;
+  --sky-3: #B23A84;
+  --sky-4: var(--flamingo);
+  --sky-5: var(--tangerine);
+  --sky-6: var(--sunbeam);
+  --sun-1: #FFF1C9;
+  --sun-2: var(--sunbeam);
+  --sun-3: var(--tangerine);
+  --cloud-lit: #FFB27A;
+  --cloud-mid: #E2558E;
+  --cloud-shade: #6C2A7A;
+  --skyline: #2A1038;
+  --skyline-far: #6A2A6E;
+  --palm: #14061F;
+  --water-1: #1E8FA0;
+  --water-2: #14224A;
 
-  /* ---- Brilhos e sombras ---- */
-  --glow-pink: 0 0 6px rgba(255, 20, 147, .9), 0 0 22px rgba(255, 20, 147, .55);
-  --glow-cyan: 0 0 6px rgba(0, 229, 229, .9), 0 0 22px rgba(0, 229, 229, .5);
-  --glow-gold: 0 0 6px rgba(255, 209, 102, .85), 0 0 20px rgba(255, 140, 66, .45);
-  --glow-magenta: 0 0 6px rgba(217, 0, 255, .85), 0 0 22px rgba(217, 0, 255, .5);
-  --shadow: 0 10px 30px rgba(5, 0, 18, .55);
-  --shadow-deep: 0 24px 60px rgba(5, 0, 18, .7);
-  --text-glow-pink: 0 0 10px rgba(255, 20, 147, .7);
-  --text-glow-cyan: 0 0 10px rgba(0, 229, 229, .7);
+  /* Grão de impressão (meio-tom) usado nos cartazes */
+  --halftone: radial-gradient(rgba(0, 0, 0, .22) 1px, transparent 1.4px) 0 0 / 5px 5px;
+
+  /* ---- Sombras: duras e pretas, de adesivo/cartaz ---- */
+  --hard-sm: 2px 2px 0 var(--ink);
+  --hard: 4px 4px 0 var(--ink);
+  --hard-lg: 6px 6px 0 var(--ink);
+  --title-shadow: drop-shadow(4px 4px 0 var(--ink));
+  --text-outline: -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink), 1px 1px 0 var(--ink), 2px 3px 0 var(--ink);
+
+  /* Brilhos suaves (só para estados ativos) */
+  --glow-pink: 0 0 0 2px var(--flamingo), 0 0 18px rgba(255, 79, 154, .45);
+  --glow-cyan: 0 0 0 2px var(--lagoon), 0 0 18px rgba(34, 199, 196, .4);
+  --glow-gold: 0 0 0 2px var(--sunbeam), 0 0 18px rgba(255, 210, 122, .4);
+  --glow-magenta: 0 0 0 2px var(--magenta), 0 0 18px rgba(180, 76, 255, .4);
+  --shadow: 0 10px 30px rgba(10, 2, 20, .5);
+  --shadow-deep: 0 24px 60px rgba(10, 2, 20, .6);
+  --text-glow-pink: 0 2px 0 var(--ink);
+  --text-glow-cyan: 0 2px 0 var(--ink);
 
   /* ---- Tipografia ---- */
   --font-display: "Anton", "Bebas Neue", Impact, "Arial Narrow", sans-serif;
   --font-body: "Inter", "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  /* ---- Formas e movimento ---- */
-  --radius-sm: 10px;
-  --radius: 16px;
-  --radius-lg: 24px;
+  /* ---- Formas e movimento: cantos retos, como placas e cartazes ---- */
+  --radius-sm: 3px;
+  --radius: 5px;
+  --radius-lg: 8px;
+  --gutter: 6px;
   --ease-out: cubic-bezier(.2, .8, .2, 1);
   --t-fast: .15s;
   --t: .25s;
@@ -134,21 +160,21 @@
   --x-color: var(--neon-cyan);
   --o-color: var(--neon-pink);
   /* Ligue 4 */
-  --c4-board: #2B0F57;
-  --c4-board-edge: var(--magenta);
+  --c4-board: #1D5A92;
+  --c4-board-edge: var(--ink);
   --c4-hole: #0F0424;
   --c4-red: #FF2D6F;
   --c4-yellow: var(--gold);
   /* Damas */
-  --ck-light: #F6D3E8;
-  --ck-dark: #4A1A80;
+  --ck-light: #FFE6CC;
+  --ck-dark: #2C6B70;
   --ck-white: #FFF8FC;
   --ck-white-edge: #C9A3C0;
   --ck-black: #1A0B2E;
   --ck-black-edge: var(--neon-cyan);
   /* Xadrez: rosa claro e roxo, peças sempre legíveis */
-  --cs-light: #F9DCEB;
-  --cs-dark: #9C6BC9;
+  --cs-light: #FFEAD2;
+  --cs-dark: #D7708F;
   --cs-white-piece: #FFFFFF;
   --cs-white-stroke: #2A0F45;
   --cs-black-piece: #1B0A2E;
@@ -158,10 +184,10 @@
   --cs-hint: rgba(24, 8, 46, .45);
   --cs-check: var(--neon-red);
   /* Campo Minado */
-  --ms-hidden: #5B2A92;
-  --ms-hidden-hover: #6E36AD;
-  --ms-hidden-edge: #7D46C2;
-  --ms-open: #1C0937;
+  --ms-hidden: #2F6E68;
+  --ms-hidden-hover: #3B847C;
+  --ms-hidden-edge: #4F9C92;
+  --ms-open: #11222B;
   --ms-own0: #0F3346;
   --ms-own1: #4A2410;
   --ms-p0: var(--neon-cyan);

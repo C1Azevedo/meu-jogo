@@ -27,6 +27,9 @@
     levelFieldLabel: document.querySelector('#level-field .field-label'),
     gameList: $('#game-list'),
     modeTitle: $('#mode-title'),
+    modePoster: $('#mode-poster'),
+    modeArt: $('#mode-art'),
+    modeDesc: $('#mode-desc'),
     difficultyButtons: document.querySelectorAll('[data-difficulty]'),
     difficultyField: $('#difficulty-field'),
     difficultyLabel: $('#difficulty-label'),
@@ -123,7 +126,8 @@
       const view = UI.views[id];
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = 'game-card';
+      // Xadrez e Dupla Tropical são os painéis grandes do mosaico
+      card.className = 'game-card' + (id === 'chess' || id === 'platformer' ? '' : ' small-card');
       card.dataset.game = id;
       card.style.setProperty('--i', i); // atraso da animação de entrada
       card.setAttribute('aria-label', `Jogar ${Games[id].name}`);
@@ -141,6 +145,11 @@
     selectedGameId = gameId;
     const game = Games[gameId];
     el.modeTitle.textContent = game.name;
+    // Cartaz do jogo (só visual)
+    el.modePoster.dataset.game = gameId;
+    // cópia do ícone com ids próprios (o original fica na tela inicial, escondida)
+    el.modeArt.innerHTML = UI.views[gameId].icon.replace(/(id="|url\(#|href="#)([\w-]+)/g, '$1$2-poster');
+    el.modeDesc.textContent = UI.views[gameId].description;
 
     // Seletor de tabuleiro (só para jogos com níveis)
     el.levelField.hidden = !game.LEVELS;

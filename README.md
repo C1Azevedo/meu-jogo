@@ -5,7 +5,7 @@ Jogo da Velha, Ligue 4, Damas, Xadrez e Campo Minado no navegador: contra o comp
 - **Servidor:** Node.js, Express e Socket.IO
 - **Front-end:** HTML, CSS e JavaScript puro (sem framework, sem etapa de build)
 - **Responsivo:** feito para funcionar bem no celular
-- **Visual:** tema neon "Miami anos 80", com ilustrações e cenário originais em SVG/CSS
+- **Visual:** cartaz de outdoor ao pôr do sol na costa tropical, com ilustrações e cenário originais em SVG/CSS
 
 ## Rodar localmente
 
@@ -174,17 +174,20 @@ Limites da física para desenhar: sozinho sobe 3 blocos, nos ombros 4, do bloco 
 
 ## Visual
 
-O tema é inspirado na estética neon de Miami nos anos 80 (pôr do sol tropical, palmeiras, skyline e brilho de fliperama). Todas as ilustrações são originais, feitas em SVG e CSS; não há imagens nem marcas de terceiros.
+O tema lembra um cartaz de outdoor ao pôr do sol numa cidade costeira tropical: céu rosa e laranja, nuvens iluminadas por baixo, mar azul-turquesa e palmeiras. A inspiração é só estética. Todas as ilustrações são originais, feitas em SVG e CSS; não há logotipos, personagens, fontes ou imagens de terceiros.
 
-- **Tokens de design:** todas as cores (rosa neon `#FF1493`, magenta `#D900FF`, roxo profundo `#18082E`, roxo `#32105C`, turquesa `#00E5E5`, laranja `#FF8C42`, dourado `#FFD166`), gradientes, brilhos, fontes e as cores dos tabuleiros ficam em `public/css/tokens.css`. Para ajustar o tema, basta mexer nesse arquivo.
-- **Fontes locais:** Anton (títulos) e Inter (textos) ficam em `public/fonts/`, com licença SIL OFL. Nada vem de CDN, então os jogos contra o computador funcionam sem internet (o app está pronto para virar PWA).
-- **Cenário:** céu de pôr do sol, sol retrô com faixas, skyline com janelas neon, água com reflexo e palmeiras, tudo num SVG leve dentro do `index.html`. Nas telas de partida o cenário fica coberto por um véu escuro, para nunca competir com o tabuleiro.
-- **Legibilidade dos tabuleiros:** o brilho neon fica só na moldura; as casas são opacas e de alto contraste. No Xadrez, as casas são rosa claro e lilás, as peças brancas têm contorno escuro e as pretas têm uma borda clara.
+- **Tokens de design:** todas as cores ficam em `public/css/tokens.css`: preto `#000000` (calhas e sombras), crepúsculo `#2B1450`, flamingo `#FF4F9A`, tangerina `#FF8A3D`, luz dourada `#FFD27A`, lagoa `#22C7C4`, areia `#FFF4E6` e verde de placar `#7CDB6A`. Os gradientes, sombras, fontes e as cores dos tabuleiros também ficam lá. Para ajustar o tema, basta mexer nesse arquivo.
+- **Fontes locais:** Anton (letreiros) e Inter (textos) ficam em `public/fonts/`, com licença SIL OFL. Nada vem de CDN, então os jogos contra o computador funcionam sem internet (o app está pronto para virar PWA).
+- **Tela inicial em mosaico:** cada jogo é um painel de cartaz com sua própria cor de céu, separado dos outros por calhas pretas. Xadrez e Dupla Tropical são os painéis grandes. O título "Hub de Jogos" tem o pôr do sol pintado dentro das letras e sombra preta dura.
+- **Menus:** cantos retos, botões que parecem adesivos (borda e sombra pretas), e a opção escolhida vira uma faixa clara com texto preto. A dificuldade aparece como estrelas de "nível de procurado". O código da sala aparece numa placa de carro.
+- **Partida:** o placar usa números grandes de painel de jogo (verde para você, rosa para o adversário). O aviso de turno fica numa caixa escura e o resultado vira uma faixa de cartaz (dourada na vitória, vermelha na derrota).
+- **Cenário:** céu de fim de tarde, sol com halo, nuvens em faixas, skyline com janelas acesas, mar com reflexo e palmeiras, tudo num SVG leve dentro do `index.html`. Nas telas de partida o cenário fica coberto por um véu escuro, para nunca competir com o tabuleiro.
+- **Legibilidade dos tabuleiros:** a moldura é preta e grossa; as casas são opacas e de alto contraste. No Xadrez, as casas são areia e rosa queimado, as peças brancas têm contorno escuro e as pretas têm uma borda clara.
 - **Layout:**
-  - Celular: cartões horizontais e tabuleiro na largura toda.
+  - Celular: mosaico em duas colunas e tabuleiro na largura toda.
   - Notebook, desktop e tablet deitado: placar e status numa coluna lateral, com o tabuleiro grande ao lado e limitado pela altura da tela, para caber inteiro.
   - Telas de toque: casas do Campo Minado com pelo menos 26 px.
-- **Animações:** são sutis (entrada das telas e dos cartões, brilho pulsante, elevação no hover, pulso do placar, do turno e do xeque). Com `prefers-reduced-motion` ativado, todas são desligadas.
+- **Animações:** poucas e ligadas a ações (aproximação da arte no hover, pulso do placar, entrada da faixa de resultado, tabuleiro e xeque). Com `prefers-reduced-motion` ativado, todas são desligadas.
 
 ## Organização do código
 
@@ -202,7 +205,7 @@ coop-server.js        Salas em tempo real da Dupla Tropical (30 ticks/s, pausa e
   ai.js                 IA: minimax com poda alfa-beta e IA de dedução do Campo Minado
 public/               Front-end estático
   index.html            As três telas (início, modo e jogo) e o cenário em SVG
-  css/tokens.css        Tokens de design: cores, gradientes, brilhos e @font-face
+  css/tokens.css        Tokens de design: cores, gradientes, sombras e @font-face
   css/style.css         Base, cenário, tela inicial e componentes compartilhados
   css/games.css         Tabuleiros e peças de cada jogo
   fonts/                Anton e Inter (woff2) e suas licenças OFL
