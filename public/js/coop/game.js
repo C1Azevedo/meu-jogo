@@ -101,6 +101,7 @@
       if (S.inGame && S.code && S.token && !S.closed) rejoin();
     });
     setInterval(() => {
+      if (S.inGame && S.code) saveSession(); // mantém a "volta automática" válida
       if (!sock.connected || !S.code) return;
       const t0 = performance.now();
       sock.timeout(4000).emit('coop:ping', Date.now(), (err) => { if (!err) S.ping = Math.round(performance.now() - t0); });
@@ -187,6 +188,7 @@
     S.particles = [];
     S.err = { x: 0, y: 0 };
     S.banner = { text: `Fase ${index + 1} · ${S.world.level.name}`, until: performance.now() + 2800 };
+    if (window.CoopAudio) window.CoopAudio.setTheme(S.theme);
     S.camX = 0;
   }
 
@@ -274,7 +276,12 @@
     if (own.state === 'alive') {
       S.world.events = [];
       E.stepPlayer(S.world, own, input);
-      for (const ev of S.world.events) if (ev.type === 'jump' && ev.p === S.seat) sound('jump');
+      for (const ev of S.world.events) {
+        if (ev.type === 'jump' && ev.p === S.seat) {
+          sound('jump');
+          burst(own.x + own.w / 2, own.y + own.h, ['#ffffff', '#e8e2f5'], 5, 30); // poeira
+        }
+      }
     }
     S.ownCur = { x: own.x, y: own.y };
   }
@@ -802,6 +809,25 @@
     el.mute.setAttribute('aria-label', muted ? 'Ligar o som' : 'Desligar o som');
   });
   if (window.CoopAudio) el.mute.setAttribute('aria-pressed', String(window.CoopAudio.isMuted()));
+
+  /**
+   * Volta automática: se a página foi recarregada no meio de uma partida (há menos
+   * de 30 s), reconecta na mesma sala com o token guardado nesta aba.
+   */
+  function resumeAfterReload() {
+    let saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem('coop.session') || 'null'); } catch (e) { saved = null; }
+    if (!saved || !saved.code || !saved.token || Date.now() - saved.at > 30000) return;
+    const sock = ensureSocket();
+    if (!sock) return;
+    S.code = saved.code;
+    S.token = saved.token;
+    sock.timeout(5000).emit('coop:rejoin', { code: saved.code, token: saved.token }, (err, res) => {
+      if (err || !res || !res.ok) { clearSession(); S.code = null; S.token = null; }
+      // Se deu certo, o servidor manda 'coop:start' e o jogo abre sozinho
+    });
+  }
+  resumeAfterReload();
 
   window.Coop = {
     create,
