@@ -12,6 +12,7 @@ const path = require('path');
 const http = require('http');
 const express = require('express');
 const { Server } = require('socket.io');
+const setupCoop = require('./coop-server');
 
 const GAMES = {
   tictactoe: require('./games/tictactoe'),
@@ -45,10 +46,14 @@ function generateCode() {
   for (let attempt = 0; attempt < 1000; attempt++) {
     let code = '';
     for (let i = 0; i < 4; i++) code += CODE_LETTERS[Math.floor(Math.random() * CODE_LETTERS.length)];
-    if (!rooms.has(code)) return code;
+    // Códigos são únicos entre as salas por turno e as salas da Dupla Tropical
+    if (!rooms.has(code) && !(coop && coop.hasRoom(code))) return code;
   }
   throw new Error('Não foi possível gerar um código de sala.');
 }
+
+// Dupla Tropical: jogo em tempo real com salas próprias (namespace /coop)
+const coop = setupCoop(io, { generateCode });
 
 /** Procura, entre as jogadas legais, a que corresponde à jogada enviada pelo cliente. */
 function findLegalMove(game, state, clientMove) {
@@ -147,7 +152,11 @@ io.on('connection', (socket) => {
     if (typeof raw !== 'string' || raw.length > 10) return reply(ack, { ok: false, error: 'Código inválido.' });
     const code = raw.trim().toUpperCase();
     const room = rooms.get(code);
-    if (!room) return reply(ack, { ok: false, error: 'Sala não encontrada.' });
+    if (!room) {
+      // O código pode ser de uma sala da Dupla Tropical: o cliente redireciona
+      if (coop.hasRoom(code)) return reply(ack, { ok: false, error: 'Esta sala é da Dupla Tropical.', gameId: 'platformer', code });
+      return reply(ack, { ok: false, error: 'Sala não encontrada.' });
+    }
     if (room.seats.includes(socket.id)) return reply(ack, { ok: false, error: 'Você já está nesta sala.' });
     if (room.seats.length >= 2) return reply(ack, { ok: false, error: 'Sala cheia.' });
     leaveRoom(socket, 'left');
@@ -204,4 +213,4 @@ if (require.main === module) {
   server.listen(PORT, () => console.log(`Hub de Jogos rodando em http://localhost:${PORT}`));
 }
 
-module.exports = { app, server, io, rooms, GAMES };
+module.exports = { app, server, io, rooms, GAMES, coop };

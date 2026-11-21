@@ -1,6 +1,6 @@
 # Hub de Jogos
 
-Jogo da Velha, Ligue 4, Damas, Xadrez e Campo Minado no navegador: contra o computador (3 dificuldades) ou online 1x1 com um amigo, usando um código de sala.
+Jogo da Velha, Ligue 4, Damas, Xadrez e Campo Minado no navegador: contra o computador (3 dificuldades) ou online 1x1 com um amigo, usando um código de sala. E a **Dupla Tropical**, um jogo de plataforma cooperativo online para dois celulares.
 
 - **Servidor:** Node.js, Express e Socket.IO
 - **Front-end:** HTML, CSS e JavaScript puro (sem framework, sem etapa de build)
@@ -111,6 +111,67 @@ A IA joga de forma justa: ela só enxerga o mesmo que você (as casas abertas), 
 
 Tabuleiro de 6×7. Vence quem alinhar 4 peças na horizontal, na vertical ou em qualquer uma das diagonais. Com o tabuleiro cheio e ninguém alinhado, dá empate.
 
+## Dupla Tropical (plataforma cooperativa online)
+
+Tuca e Mel atravessam uma ilha tropical juntos: pegam moedas, desviam de caranguejos e águas-vivas e precisam chegar **os dois** à bandeira. Cada pessoa joga no próprio celular (ou computador). Personagens, mundo, desenhos e músicas são originais, feitos em código.
+
+### Como jogar
+
+1. Na tela inicial, escolha **Dupla Tropical**, a fase inicial e toque em **Criar sala**.
+2. O parceiro escolhe **Dupla Tropical**, digita o código de 4 letras e toca em **Entrar na sala**. (Se ele digitar o código na tela de outro jogo, o hub leva para a sala certa.)
+3. No celular, jogue com a tela **deitada**. Se estiver em pé, o jogo pede para girar.
+
+| | Celular | Computador |
+|---|---|---|
+| Andar | botões ◀ ▶ (dá para deslizar o polegar de um para o outro) | setas ou A/D |
+| Pular | botão **Pular** (quanto mais tempo segurar, mais alto) | espaço, W ou seta para cima |
+
+Os botões da tela aceitam vários dedos ao mesmo tempo (segurar "direita" e apertar "pular", por exemplo). O botão 🔊 liga e desliga o som, e a escolha fica salva no aparelho.
+
+### Cooperação
+
+- **Ombros:** pulando sozinho, dá para subir 3 blocos; em cima dos ombros do parceiro, 4. Quem está em cima é carregado quando o de baixo anda.
+- **Botão no alto:** um sobe nos ombros do outro e aperta o botão que abre a porta para o parceiro passar.
+- **Porta de dois botões:** só abre com os dois botões apertados **ao mesmo tempo** (um caixote também aperta um botão). Depois de aberta, fica aberta.
+- **Bloco pesado (2×):** só se move com os dois empurrando juntos. Encostado na parede, vira degrau para subir 5 blocos.
+- **Bolha:** quem cai num buraco, encosta em inimigo ou em espinhos vira uma bolha que flutua até o parceiro. Basta encostar nela para resgatar. Só há **fim de jogo** se os dois estiverem em bolha ao mesmo tempo, ou se o tempo acabar. Aí os dois votam em "Tentar de novo" e recomeçam do último **checkpoint**, com as moedas já pegas.
+
+Itens e inimigos: **moedas**, **carambola estelar** (8 s de invencibilidade e mais velocidade: derruba inimigos encostando), **caranguejo-beliscão** (pule em cima dele), **água-viva** (flutua para cima e para baixo), **espinhos** e o chefe **Rei Beliscão**. O chefe precisa de 3 pisões, fica invencível um instante depois de cada um e mais rápido a cada vida perdida. A porta da saída abre quando ele cai.
+
+O placar é compartilhado: moedas, tempo restante e bolhas (mortes). Ele aparece no alto da tela, junto com o **ping**.
+
+### As 5 fases
+
+1. **Praia do Coqueiro:** ensina pulo, vãos, caranguejos e a porta de dois botões.
+2. **Bosque das Bromélias:** ombros, botão no alto, águas-vivas e caixote.
+3. **Caverna de Cristal:** bloco pesado, espinhos e dois checkpoints.
+4. **Ponte das Nuvens:** tudo junto, com mais vãos.
+5. **Covil do Rei Beliscão:** o caminho até a arena e a luta contra o chefe.
+
+### Online: como funciona
+
+- **Servidor autoritativo** (`coop-server.js`, namespace Socket.IO `/coop`): guarda o mundo e simula física e colisões a **30 ticks/s** com o mesmo motor do cliente (`games/platformer.js`). O cliente só manda as teclas apertadas, numeradas. Entradas repetidas, fora de ordem ou com campos forjados são ignoradas.
+- **Previsão local:** o próprio personagem anda na hora, rodando o mesmo motor no celular. Quando chega o estado oficial, o cliente volta para a posição do servidor e reaplica as teclas que o servidor ainda não processou. A pequena diferença que sobra é desfeita aos poucos.
+- **Interpolação:** o parceiro, os inimigos e os caixotes são desenhados uns 100 ms no passado, entre dois estados recebidos, para o movimento ficar suave mesmo com rede irregular.
+- **Queda e atraso:**
+  - Se alguém perde a conexão, o jogo **pausa** para os dois e a vaga fica guardada por **30 s**. O celular reconecta sozinho (ou pelo botão "Reconectar agora"). Se a pessoa recarregar a página, também volta automaticamente para a mesma sala.
+  - Se alguém fica 3 s sem mandar nada (rede muito lenta, aba em segundo plano), o jogo pausa e volta sozinho quando a conexão melhora.
+
+### Criar uma fase nova
+
+As fases ficam em `games/platformer-levels.js`, como **texto**: cada fase é uma lista de 15 linhas, todas do mesmo tamanho, e cada caractere é um bloco. Para criar uma fase, copie uma existente, edite o mapa e acrescente no fim da lista. Ela aparece sozinha no seletor de fase.
+
+```
+.  vazio              #  chão              =  tijolo            -  plataforma vazada
+o  moeda              x  espinhos          *  carambola estelar
+c  caranguejo         j  água-viva         K  chefe
+k  caixote            H  bloco pesado 2×2 (canto de cima à esquerda)
+_  botão de pressão   D  porta (cada botão abre a porta mais próxima; porta sem botões abre com o chefe derrotado)
+C  checkpoint         F  bandeira final    1 2  início da Tuca e do Mel
+```
+
+Limites da física para desenhar: sozinho sobe 3 blocos, nos ombros 4, do bloco pesado 5; vão de até 3 blocos; espinhos de até 2. Rode `npm test`: o teste confere se a fase é válida e um **robô cooperativo** (`test/helpers/coop-bot.js`) joga as fases com os dois personagens, subindo nos ombros, apertando botões e empurrando o bloco pesado. O teste falha se alguma fase não puder ser concluída.
+
 ## Visual
 
 O tema é inspirado na estética neon de Miami nos anos 80 (pôr do sol tropical, palmeiras, skyline e brilho de fliperama). Todas as ilustrações são originais, feitas em SVG e CSS; não há imagens nem marcas de terceiros.
@@ -135,6 +196,9 @@ games/                Lógica pura dos jogos e da IA, compartilhada entre servid
   checkers.js           Regras das Damas
   minesweeper.js        Regras do Campo Minado (inclui o estado público, sem as minas)
   chess.js              Regras do Xadrez
+  platformer.js         Motor da Dupla Tropical (física, colisões, regras; servidor e previsão no cliente)
+  platformer-levels.js  As fases da Dupla Tropical (dados em texto)
+coop-server.js        Salas em tempo real da Dupla Tropical (30 ticks/s, pausa e reconexão)
   ai.js                 IA: minimax com poda alfa-beta e IA de dedução do Campo Minado
 public/               Front-end estático
   index.html            As três telas (início, modo e jogo) e o cenário em SVG
@@ -149,7 +213,13 @@ public/               Front-end estático
   js/minesweeper.js     Interface do Campo Minado
   js/chess.js           Interface do Xadrez
   js/ai-worker.js       Web Worker que roda a IA fora da thread da interface
+  js/platformer.js      Cartão e seletor de fase da Dupla Tropical no hub
+  js/coop/sprites.js    Pixel art, terreno e cenário com parallax (tudo desenhado em código)
+  js/coop/input.js      Teclado e botões de toque com multitoque
+  js/coop/audio.js      Efeitos e música sintetizados com Web Audio
+  js/coop/game.js       Cliente: canvas, previsão local, interpolação, placar e avisos
 test/                 Testes automatizados (node --test)
+  helpers/coop-bot.js   Robô cooperativo que prova que todas as fases têm solução
 ```
 
 Cada arquivo em `games/` segue a mesma interface (`createState`, `getMoves`, `applyMove`, `evaluate`, `moveKey`) e funciona tanto com `require()` no Node quanto com `<script>` no navegador. Assim, a IA roda no navegador e o servidor valida as jogadas online com exatamente as mesmas regras.
@@ -191,5 +261,6 @@ Observações:
 
 - Não é preciso configurar a porta: o Render define a variável `PORT` e o servidor já usa essa variável.
 - No plano gratuito, o serviço "dorme" depois de um tempo sem acesso. O primeiro acesso depois disso pode levar cerca de um minuto.
+- O Render tem suporte a WebSocket, que a Dupla Tropical usa para o tempo real. Num servidor gratuito, o ping costuma ficar entre 50 e 150 ms, e a previsão local esconde esse atraso no próprio personagem.
 - As salas ficam na memória do servidor. Se ele reiniciar ou dormir, as partidas online em andamento são encerradas. Para este projeto isso basta, e por isso use **uma única instância**: com várias instâncias, cada uma teria as próprias salas.
 - A cada `git push` na branch configurada, o Render faz o deploy de novo automaticamente.
