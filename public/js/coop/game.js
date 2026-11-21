@@ -616,14 +616,14 @@
     if (e.type === 'jelly') {
       ctx.drawImage(SP.jelly(Math.floor(t * 4)).right, pos.x, pos.y);
     } else if (e.type === 'boss') {
-      const s = SP.crab(Math.floor(t * 5));
+      const s = SP.boss(Math.floor(t * 4));
       const img = (pos.dir || -1) > 0 ? s.right : s.left;
-      ctx.drawImage(img, pos.x - 1, pos.y, 42, 30);
-      ctx.drawImage(SP.crown().right, pos.x + 15, pos.y - 5);
+      ctx.drawImage(img, pos.x, pos.y + 2, 40, 28);
+      ctx.drawImage(SP.crown().right, pos.x + 15, pos.y - 3);
       // vida do chefe
       for (let k = 0; k < 3; k++) {
         ctx.fillStyle = k < pos.hp ? '#ff3b6b' : 'rgba(0,0,0,.35)';
-        ctx.fillRect(pos.x + 8 + k * 9, pos.y - 10, 7, 3);
+        ctx.fillRect(pos.x + 8 + k * 9, pos.y - 9, 7, 3);
       }
     } else {
       const s = SP.crab(Math.floor(t * 6));

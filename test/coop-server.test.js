@@ -216,3 +216,38 @@ test('game over: "tentar de novo" precisa dos dois e recomeça do checkpoint', a
   pa.stop(); pb.stop();
   a.close(); b.close();
 });
+
+test('fase concluída: o servidor passa para a próxima mantendo o placar', async () => {
+  const { a, b, code } = await setupRoom();
+  const pa = pump(a);
+  const pb = pump(b);
+  const room = coop.rooms.get(code);
+  room.world.stats.coins = 7;
+  room.world.stats.deaths = 2;
+  room.world.status = 'levelclear';
+  room.world.statusTimer = 0;
+  const s = await waitState(a, (st) => st.level === 1);
+  assert.strictEqual(s.status, 'playing');
+  assert.strictEqual(s.stats.coins, 7, 'moedas continuam');
+  assert.strictEqual(s.stats.deaths, 2);
+  assert.strictEqual(s.levelCoins, 0, 'contador da fase zera');
+  pa.stop(); pb.stop();
+  a.close(); b.close();
+});
+
+test('vitória depois da última fase e "jogar de novo" volta para a fase 1 com placar zerado', async () => {
+  const { a, b, code } = await setupRoom(4);
+  const pa = pump(a);
+  const pb = pump(b);
+  const room = coop.rooms.get(code);
+  assert.strictEqual(room.world.levelIndex, 4, 'começou na fase escolhida');
+  room.world.status = 'levelclear';
+  room.world.statusTimer = 0;
+  await waitState(a, (st) => st.status === 'victory');
+  a.emit('coop:retry');
+  b.emit('coop:retry');
+  const s = await waitState(a, (st) => st.status === 'playing' && st.level === 0);
+  assert.strictEqual(s.stats.coins, 0);
+  pa.stop(); pb.stop();
+  a.close(); b.close();
+});

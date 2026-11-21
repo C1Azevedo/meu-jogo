@@ -56,8 +56,9 @@
    *   o  moeda            x  espinhos        *  carambola estelar (poder temporário)
    *   c  caranguejo       j  água-viva       K  chefe (Rei Beliscão)
    *   k  caixote (1 jogador empurra)         H  bloco pesado 2×2 (só os dois juntos empurram)
-   *   _  botão de pressão D  porta (abre quando TODOS os botões antes dela estão apertados ao mesmo tempo;
-   *                                  porta sem botões abre quando o chefe é derrotado)
+   *   _  botão de pressão D  porta (abre quando TODOS os botões ligados a ela estão apertados ao mesmo
+   *                                  tempo; cada botão liga na porta mais próxima; porta sem botões
+   *                                  abre quando o chefe é derrotado)
    *   C  checkpoint       F  bandeira final  1 / 2  início de cada jogador
    */
   const LEGEND = '.#=-oxcjKkH_DCF12*';
@@ -118,18 +119,20 @@
         if (!keep) grid[ty][tx] = '.';
       }
     }
-    // Portas: colunas contíguas de 'D'. Os botões entre a porta anterior e esta controlam esta porta.
+    // Portas: colunas contíguas de 'D'. Cada botão controla a porta mais próxima (na horizontal).
     doorCells.sort((a, b) => a.tx - b.tx || a.ty - b.ty);
     for (const cell of doorCells) {
       const last = out.doors[out.doors.length - 1];
       if (last && last.tx === cell.tx && last.ty + last.hTiles === cell.ty) last.hTiles++;
       else out.doors.push({ id: out.doors.length, tx: cell.tx, ty: cell.ty, hTiles: 1, plates: [] });
     }
-    let prevTx = -1;
-    for (const door of out.doors) {
-      door.plates = out.plates.filter((p) => p.tx > prevTx && p.tx < door.tx).map((p) => out.plates.indexOf(p));
-      prevTx = door.tx;
-    }
+    out.plates.forEach((pl, i) => {
+      let best = null;
+      for (const door of out.doors) {
+        if (!best || Math.abs(door.tx - pl.tx) < Math.abs(best.tx - pl.tx)) best = door;
+      }
+      if (best) best.plates.push(i);
+    });
     return out;
   }
 

@@ -493,3 +493,150 @@ test('a fase não termina enquanto o parceiro está em bolha', () => {
   run(w, 5);
   assert.strictEqual(w.status, 'playing', 'não termina com o parceiro na bolha');
 });
+
+// ---------------------------------------------------------------------------
+// Inimigos, itens e checkpoints
+// ---------------------------------------------------------------------------
+
+test('caranguejo: pular em cima derrota; encostar de lado vira bolha', () => {
+  const map = FLAT.slice();
+  map[12] = '.1..2.........c...............';
+  const w = world(map);
+  const crab = w.enemies[0];
+  const [a] = w.players;
+  run(w, 5);
+  // Cai em cima do caranguejo
+  a.x = crab.x + 1;
+  a.y = crab.y - 30;
+  a.vy = 100;
+  run(w, 10);
+  assert.strictEqual(crab.alive, false, 'derrotado');
+  assert.ok(a.state === 'alive' && w.stats.deaths === 0);
+
+  const w2 = world(map);
+  const crab2 = w2.enemies[0];
+  run(w2, 5);
+  w2.players[0].x = crab2.x - 20;
+  run(w2, 30, [R, N]);
+  assert.strictEqual(w2.players[0].state, 'bubble', 'encostou de lado');
+  assert.strictEqual(crab2.alive, true);
+});
+
+test('caranguejo vira na beirada e na parede (não cai)', () => {
+  const map = FLAT.slice();
+  map[12] = '.1..2...........c.............';
+  map[13] = '##############....############';
+  map[14] = '##############....############';
+  map[12] = map[12].slice(0, 14) + '=.c' + map[12].slice(17);
+  map[13] = '##############.###############';
+  const w = world(map);
+  const crab = w.enemies[0];
+  const xs = [];
+  run(w, 300, (i) => { xs.push(crab.x); return [N, N]; });
+  assert.ok(crab.alive && crab.y + crab.h === 13 * T, 'continua no chão');
+  assert.ok(Math.max(...xs) - Math.min(...xs) > 4, 'anda de um lado para o outro');
+});
+
+test('água-viva flutua para cima e para baixo', () => {
+  const map = FLAT.slice();
+  map[8] = '..........j...................';
+  const w = world(map);
+  const ys = [];
+  run(w, 90, () => { ys.push(w.enemies[0].y); return [N, N]; });
+  assert.ok(Math.max(...ys) - Math.min(...ys) > 30);
+});
+
+test('espinhos viram bolha', () => {
+  const map = FLAT.slice();
+  map[12] = '.1..2...xx....................';
+  const w = world(map);
+  let ticks = 0;
+  while (w.players[0].state === 'alive' && ticks < 90) { run(w, 1, [R, N]); ticks++; }
+  assert.strictEqual(w.players[0].state, 'bubble');
+  assert.strictEqual(w.stats.deaths, 1);
+});
+
+test('carambola estelar: invencível por 8 s, derrota inimigos encostando e corre mais', () => {
+  const map = FLAT.slice();
+  map[12] = '.1..2.*....c.c.c..............';
+  const w = world(map);
+  const [a] = w.players;
+  run(w, 70, [R, N]);
+  assert.ok(a.star > 0, 'pegou o poder');
+  assert.strictEqual(a.state, 'alive');
+  assert.strictEqual(w.enemies.filter((e) => e.alive).length, 0, 'derrubou os três');
+  assert.ok(a.vx > E.C.run, 'mais rápido');
+  run(w, 30 * 9);
+  assert.strictEqual(a.star, 0, 'o poder acaba');
+});
+
+test('checkpoint: game over recomeça do checkpoint, com as moedas já pegas', () => {
+  const map = FLAT.slice();
+  map[12] = '.1..2.oo..C...................';
+  const w = world(map);
+  run(w, 70, [R, R]);
+  assert.strictEqual(w.checkpoint, w.level.checkpoints[0].id);
+  assert.strictEqual(w.stats.coins, 2);
+  E.hurtPlayer(w, w.players[0], false);
+  E.hurtPlayer(w, w.players[1], false);
+  run(w, 1);
+  assert.strictEqual(w.status, 'gameover');
+  E.retryFromCheckpoint(w);
+  assert.strictEqual(w.status, 'playing');
+  const cpX = w.level.checkpoints[0].tx * T;
+  assert.ok(w.players.every((p) => Math.abs(p.x - cpX) < 20), 'os dois no checkpoint');
+  assert.strictEqual(w.stats.coins, 2, 'moedas mantidas');
+  assert.strictEqual(w.coinsTaken.length, 2);
+});
+
+test('chefe: precisa de 3 pisões (com tempo de invencibilidade) e abre a porta da saída', () => {
+  const map = FLAT.slice();
+  map[12] = '.1..2.........K..........D....';
+  for (let y = 1; y < 12; y++) map[y] = map[y].slice(0, 25) + 'D' + map[y].slice(26);
+  const w = world(map);
+  const boss = w.enemies[0];
+  const [a] = w.players;
+  assert.strictEqual(w.level.doors[0].plates.length, 0, 'porta sem botões');
+  const stomp = () => {
+    a.state = 'alive';
+    a.invuln = 0;
+    a.x = boss.x + 14;
+    a.y = boss.y - 20;
+    a.vy = 150;
+    run(w, 2);
+  };
+  stomp();
+  assert.strictEqual(boss.hp, 2);
+  stomp(); // logo em seguida: ainda invencível
+  assert.strictEqual(boss.hp, 2);
+  run(w, 40);
+  stomp();
+  run(w, 40);
+  stomp();
+  assert.strictEqual(boss.alive, false);
+  assert.strictEqual(w.bossDefeated, true);
+  run(w, 1);
+  assert.strictEqual(w.doors[0].open, true, 'porta da saída abriu');
+});
+
+// ---------------------------------------------------------------------------
+// As fases têm solução: o "robô cooperativo" joga cada uma até o fim
+// ---------------------------------------------------------------------------
+
+test('todas as fases podem ser concluídas pela dupla (robô cooperativo)', () => {
+  const { playLevel } = require('./helpers/coop-bot');
+  LEVELS.forEach((lv, i) => {
+    const r = playLevel(LEVELS, i);
+    assert.ok(r.cleared, `fase ${i + 1} (${lv.name}) não foi concluída: ${r.world.status}, x=${r.world.players.map((p) => Math.round(p.x / T))}`);
+    assert.ok(r.ticks / 30 < lv.time, `fase ${i + 1} terminou dentro do tempo`);
+  });
+});
+
+test('dificuldade crescente: fases maiores e com mais mecânicas', () => {
+  const parsed = LEVELS.map((lv) => E.parseLevel(lv));
+  assert.strictEqual(LEVELS.length, 5);
+  for (let i = 1; i < 4; i++) assert.ok(parsed[i].w >= parsed[i - 1].w, 'fases 1-4 ficam mais longas');
+  assert.ok(parsed[0].doors.length >= 1, 'fase 1 já ensina a porta de dois botões');
+  assert.ok(parsed.slice(2, 4).every((L) => L.crates.some((c) => c.heavy)), 'fases 3 e 4 têm bloco pesado');
+  assert.ok(parsed[4].enemies.some((e) => e.type === 'boss'), 'fase 5 tem o chefe');
+});
