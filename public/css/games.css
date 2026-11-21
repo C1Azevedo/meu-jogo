@@ -396,3 +396,198 @@
 @media (pointer: coarse) {
   .ms-grid { --cell: clamp(26px, min(var(--fit-w), var(--fit-h)), 40px); }
 }
+
+/* ======================================================================
+   Dupla Tropical (plataforma cooperativa em tempo real)
+   Tela cheia, sem rolagem; o placar e os botões ficam sobre o canvas.
+   ====================================================================== */
+
+body[data-screen="coop"] { overflow: hidden; overscroll-behavior: none; }
+body[data-screen="coop"] .app { padding: 0; max-width: none; }
+#screen-coop.active {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: block;
+  overflow: hidden;
+  background: var(--deep-purple);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  animation: none;
+}
+#coop-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+
+.coop-hud {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  left: max(8px, env(safe-area-inset-left));
+  right: max(8px, env(safe-area-inset-right));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.coop-hud > * { pointer-events: auto; }
+.coop-stats { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 0; }
+.coop-stat, .coop-ping {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(24, 8, 46, .72);
+  border: 1px solid rgba(255, 255, 255, .22);
+  color: var(--white);
+  font-weight: 800;
+  font-size: .85rem;
+  font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(2px);
+}
+.coop-stat svg { width: 16px; height: 16px; color: var(--neon-cyan); }
+.coop-stat.low { border-color: var(--neon-red); color: var(--neon-red); animation: turn-pulse 1s ease-in-out infinite; }
+.coop-level { color: var(--gold); }
+.coop-right { display: flex; align-items: center; gap: 6px; }
+.coop-ping { font-size: .75rem; color: var(--muted); }
+.coop-ping[data-quality="good"] { color: var(--neon-green); }
+.coop-ping[data-quality="ok"] { color: var(--gold); }
+.coop-ping[data-quality="bad"] { color: var(--neon-red); }
+.coop-btn {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .3);
+  background: rgba(24, 8, 46, .72);
+  color: var(--white);
+  cursor: pointer;
+}
+.coop-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.coop-btn:focus-visible { outline: 3px solid var(--neon-cyan); }
+#coop-mute .snd-off, #coop-mute[aria-pressed="true"] .snd-on { display: none; }
+#coop-mute[aria-pressed="true"] .snd-off { display: block; }
+
+.coop-partners {
+  position: absolute;
+  top: calc(max(8px, env(safe-area-inset-top)) + 44px);
+  left: max(8px, env(safe-area-inset-left));
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+}
+.coop-mate {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(24, 8, 46, .6);
+  color: var(--white);
+  font-size: .72rem;
+  font-weight: 800;
+}
+.coop-mate small { font-weight: 600; color: var(--muted); }
+.coop-mate i { width: 9px; height: 9px; border-radius: 50%; background: #19c3c8; }
+.coop-mate.p1 i { background: #ff5f7e; }
+.coop-mate.bubble i { background: #9be7ff; box-shadow: 0 0 6px #9be7ff; }
+.coop-mate.bubble small { color: #9be7ff; }
+.coop-mate.offline { opacity: .6; }
+.coop-mate.offline small { color: var(--neon-red); }
+
+/* Controles de toque: grandes, só em telas de toque */
+.coop-touch { display: none; }
+@media (pointer: coarse) {
+  .coop-touch { display: block; }
+}
+.coop-touch.force { display: block; }
+.coop-pad {
+  position: absolute;
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 14px;
+}
+.coop-touch button {
+  display: grid;
+  place-items: center;
+  width: clamp(76px, 15vmin, 108px);
+  height: clamp(76px, 15vmin, 108px);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .55);
+  background: rgba(24, 8, 46, .38);
+  color: var(--white);
+  touch-action: none;
+  transition: transform .06s, background .06s;
+}
+.coop-touch button svg { width: 46%; height: 46%; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.coop-touch button.pressed { background: rgba(0, 229, 229, .45); border-color: var(--neon-cyan); transform: scale(.94); }
+.coop-jump {
+  position: absolute;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  width: clamp(92px, 19vmin, 128px) !important;
+  height: clamp(92px, 19vmin, 128px) !important;
+  background: rgba(255, 20, 147, .35) !important;
+  border-color: rgba(255, 140, 200, .8) !important;
+}
+.coop-jump span { position: absolute; bottom: 14%; font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; pointer-events: none; }
+.coop-jump.pressed { background: rgba(255, 20, 147, .7) !important; }
+
+/* Avisos (pausa, reconexão, fim de jogo, vitória) */
+.coop-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(13, 3, 32, .62);
+  z-index: 3;
+}
+.coop-card {
+  width: min(100%, 440px);
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  background: var(--gradient-panel);
+  border: 2px solid var(--neon-pink);
+  box-shadow: var(--glow-pink), var(--shadow-deep);
+  text-align: center;
+  animation: panel-open .25s var(--ease-out);
+}
+.coop-card h2 { font-size: clamp(1.6rem, 6vmin, 2.4rem); }
+.coop-card p { margin: 10px 0 16px; color: var(--pink-soft); font-weight: 600; }
+.coop-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.coop-overlay[data-kind="pause"] .coop-card, .coop-overlay[data-kind="conn"] .coop-card { border-color: var(--gold); box-shadow: var(--glow-gold), var(--shadow-deep); }
+.coop-overlay[data-kind="victory"] .coop-card { border-color: var(--neon-green); }
+
+/* Celular na vertical: pede para girar */
+.coop-rotate { display: none; }
+@media (pointer: coarse) and (orientation: portrait) {
+  .coop-rotate {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+    background: var(--deep-purple);
+    color: var(--gold);
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+  }
+  .coop-rotate svg { width: 84px; height: 84px; animation: rotate-hint 1.8s ease-in-out infinite; }
+}
+@keyframes rotate-hint { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+
+/* Telas baixas (celular deitado): placar mais compacto */
+@media (max-height: 420px) {
+  .coop-stat, .coop-ping { min-height: 28px; padding: 2px 8px; font-size: .78rem; }
+  .coop-btn { width: 34px; height: 34px; }
+  .coop-partners { top: calc(max(6px, env(safe-area-inset-top)) + 36px); }
+}

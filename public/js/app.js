@@ -16,13 +16,15 @@
 
   const Games = window.Games;
   const UI = window.UI;
-  const GAME_ORDER = ['tictactoe', 'connect4', 'checkers', 'chess', 'minesweeper'].filter((id) => Games[id] && UI.views[id]);
+  const GAME_ORDER = ['tictactoe', 'connect4', 'checkers', 'chess', 'minesweeper', 'platformer'].filter((id) => Games[id] && UI.views[id]);
   const CPU_DELAY_MS = 450;
   const DIFFICULTY_LABEL = { easy: 'Fácil', medium: 'Médio', hard: 'Difícil' };
 
   const $ = (sel) => document.querySelector(sel);
   const el = {
-    screens: { home: $('#screen-home'), mode: $('#screen-mode'), game: $('#screen-game') },
+    screens: { home: $('#screen-home'), mode: $('#screen-mode'), game: $('#screen-game'), coop: $('#screen-coop') },
+    panelCpu: document.querySelector('.panel-cpu'),
+    levelFieldLabel: document.querySelector('#level-field .field-label'),
     gameList: $('#game-list'),
     modeTitle: $('#mode-title'),
     difficultyButtons: document.querySelectorAll('[data-difficulty]'),
@@ -73,6 +75,7 @@
   let cpuType = storageGet('hub.cpuType') || 'solo'; // Campo Minado: 'solo' ou 'versus'
   let socket = null;
   let waitingCode = null; // sala criada aguardando adversário
+  let waitingCoop = false; // a sala em espera é da Dupla Tropical (tempo real)?
   let currentScreen = 'home';
 
   /**
@@ -106,6 +109,8 @@
   window.addEventListener('popstate', (e) => {
     const target = (e.state && e.state.screen) || 'home';
     if (currentScreen === 'game' && target !== 'game') endSession();
+    if (currentScreen === 'coop' && target !== 'coop' && window.Coop) window.Coop.leave();
+    if (target === 'coop' && !(window.Coop && window.Coop.isActive())) return showScreen(selectedGameId ? 'mode' : 'home', { push: false });
     if (currentScreen === 'mode' && target === 'home') cancelWaitingRoom();
     if (target === 'game' && !session) return showScreen(selectedGameId ? 'mode' : 'home', { push: false });
     if (target === 'mode' && !selectedGameId) return showScreen('home', { push: false });
@@ -140,17 +145,21 @@
     // Seletor de tabuleiro (só para jogos com níveis)
     el.levelField.hidden = !game.LEVELS;
     el.levelPicker.innerHTML = '';
+    el.levelFieldLabel.textContent = game.levelFieldLabel || 'Tabuleiro';
     if (game.LEVELS) {
-      if (!game.LEVELS[level]) level = 'easy';
+      // Nível guardado por jogo (Campo Minado: tabuleiro; Dupla Tropical: fase inicial)
+      const saved = gameId === 'minesweeper' ? storageGet('hub.level') : storageGet('hub.level.' + gameId);
+      level = game.LEVELS[saved] ? saved : Object.keys(game.LEVELS)[0];
       for (const [id, info] of Object.entries(game.LEVELS)) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.setAttribute('role', 'radio');
         btn.dataset.level = id;
-        btn.innerHTML = `${info.label}<small>${info.cols}×${info.rows} · ${info.mines} minas</small>`;
+        const detail = info.detail || `${info.cols}×${info.rows} · ${info.mines} minas`;
+        btn.innerHTML = `${info.label}<small>${detail}</small>`;
         btn.addEventListener('click', () => {
           level = id;
-          storageSet('hub.level', level);
+          storageSet(gameId === 'minesweeper' ? 'hub.level' : 'hub.level.' + gameId, level);
           renderModeOptions();
         });
         el.levelPicker.appendChild(btn);
@@ -158,8 +167,11 @@
     }
     // Campo Minado tem "desafio solo" além de "contra a CPU"
     el.cpuTypeField.hidden = game.ai.kind !== 'minesweeper';
+    // Jogos em tempo real (Dupla Tropical) são só online: painel online já aberto
+    const realtime = !!UI.views[gameId].realtime;
+    el.panelCpu.hidden = realtime;
     resetOnlinePanel();
-    setOnlineOpen(false);
+    setOnlineOpen(realtime);
     renderModeOptions();
     showScreen('mode');
   }
@@ -496,12 +508,63 @@
   }
 
   function cancelWaitingRoom() {
-    if (waitingCode && socket) socket.emit('room:leave');
+    if (waitingCode && waitingCoop && window.Coop) window.Coop.leave();
+    else if (waitingCode && socket) socket.emit('room:leave');
     waitingCode = null;
+    waitingCoop = false;
     resetOnlinePanel();
   }
 
+  function showWaiting(code) {
+    waitingCode = code;
+    el.roomCode.textContent = code;
+    el.copyHint.textContent = 'Toque no código para copiar';
+    el.onlineActions.hidden = true;
+    el.onlineWaiting.hidden = false;
+  }
+
+  /** Dupla Tropical: salas em tempo real, tratadas por js/coop/game.js. */
+  function createCoopRoom() {
+    showOnlineError('');
+    el.btnCreateRoom.disabled = true;
+    window.Coop.create(Number(level) || 0).then((res) => {
+      el.btnCreateRoom.disabled = false;
+      if (!res.ok) return showOnlineError(res.error);
+      waitingCoop = true;
+      showWaiting(res.code);
+    });
+  }
+  function joinCoopRoom(code) {
+    showOnlineError('');
+    window.Coop.join(code).then((res) => {
+      if (!res.ok) setCodeState('invalid', res.error);
+      // A partida começa com o evento 'coop:start' (window.Hub.enterCoop)
+    });
+  }
+
+  // Ponte usada pelo cliente da Dupla Tropical
+  window.Hub = {
+    enterCoop() {
+      waitingCode = null;
+      waitingCoop = false;
+      endSession();
+      showScreen('coop');
+    },
+    exitCoop() {
+      resetOnlinePanel();
+      showScreen(selectedGameId ? 'mode' : 'home');
+    },
+    coopWaitingClosed() {
+      if (!waitingCoop) return;
+      waitingCode = null;
+      waitingCoop = false;
+      resetOnlinePanel();
+      showOnlineError('A sala foi encerrada.');
+    },
+  };
+
   function createRoom() {
+    if (UI.views[selectedGameId].realtime) return createCoopRoom();
     const sock = ensureSocket();
     if (!sock) return;
     showOnlineError('');
@@ -511,22 +574,21 @@
       el.btnCreateRoom.disabled = false;
       if (err) return showOnlineError('Não foi possível conectar ao servidor.');
       if (!res.ok) return showOnlineError(res.error);
-      waitingCode = res.code;
-      el.roomCode.textContent = res.code;
-      el.copyHint.textContent = 'Toque no código para copiar';
-      el.onlineActions.hidden = true;
-      el.onlineWaiting.hidden = false;
+      showWaiting(res.code);
     });
   }
 
   function joinRoom(rawCode) {
     const code = rawCode.trim().toUpperCase();
     if (!/^[A-Z]{4}$/.test(code)) return setCodeState('invalid', 'O código tem 4 letras.');
+    if (UI.views[selectedGameId].realtime) return joinCoopRoom(code);
     const sock = ensureSocket();
     if (!sock) return;
     showOnlineError('');
     sock.timeout(8000).emit('room:join', { code }, (err, res) => {
       if (err) return showOnlineError('Não foi possível conectar ao servidor.');
+      // Código de uma sala da Dupla Tropical digitado em outro jogo: entra nela
+      if (!res.ok && res.gameId === 'platformer' && window.Coop) return joinCoopRoom(code);
       if (!res.ok) return setCodeState('invalid', res.error);
       // A partida começa com o evento 'game:start'.
     });

@@ -171,6 +171,56 @@
       </div>
     </section>
 
+    <!-- Tela 4: Dupla Tropical (jogo em tempo real, tela cheia) -->
+    <section id="screen-coop" class="screen coop-screen" aria-label="Dupla Tropical">
+      <canvas id="coop-canvas" aria-label="Fase do jogo"></canvas>
+
+      <div class="coop-hud">
+        <button id="coop-exit" class="coop-btn" type="button" aria-label="Sair da partida">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5M14 8l-4 4 4 4M10 12h10"/></svg>
+        </button>
+        <div class="coop-stats" aria-label="Placar compartilhado">
+          <span class="coop-stat" title="Moedas"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#ffd166" stroke="#b87a00" stroke-width="2"/><rect x="7" y="4" width="2" height="8" fill="#b87a00"/></svg><b id="coop-coins">0</b></span>
+          <span class="coop-stat" title="Tempo restante"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg><b id="coop-time">0:00</b></span>
+          <span class="coop-stat" title="Bolhas (mortes)"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="rgba(155,231,255,.35)" stroke="#9be7ff" stroke-width="2"/><rect x="4.5" y="4" width="3" height="2" fill="#fff"/></svg><b id="coop-deaths">0</b></span>
+          <span class="coop-stat coop-level" id="coop-level">Fase 1</span>
+        </div>
+        <div class="coop-right">
+          <span id="coop-ping" class="coop-ping" title="Ping">— ms</span>
+          <button id="coop-mute" class="coop-btn" type="button" aria-label="Desligar o som" aria-pressed="false">
+            <svg class="snd-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/></svg>
+            <svg class="snd-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM17 9l5 6M22 9l-5 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="coop-partners" class="coop-partners" aria-live="polite"></div>
+
+      <!-- Controles de toque (multitoque) -->
+      <div id="coop-touch" class="coop-touch">
+        <div class="coop-pad">
+          <button type="button" data-key="left" aria-label="Esquerda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button type="button" data-key="right" aria-label="Direita"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+        <button type="button" data-key="jump" class="coop-jump" aria-label="Pular"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6"/></svg><span>Pular</span></button>
+      </div>
+
+      <div id="coop-overlay" class="coop-overlay" hidden role="dialog" aria-live="assertive">
+        <div class="coop-card">
+          <h2 id="coop-ov-title" class="neon-title"></h2>
+          <p id="coop-ov-text"></p>
+          <div class="coop-actions">
+            <button id="coop-ov-primary" class="btn btn-primary btn-neon" type="button"></button>
+            <button id="coop-ov-secondary" class="btn" type="button"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="coop-rotate" aria-hidden="true">
+        <svg viewBox="0 0 64 64"><rect x="20" y="8" width="24" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><path d="M8 40a24 24 0 0024 18M52 24A24 24 0 0032 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        <p>Gire o celular para jogar na horizontal</p>
+      </div>
+    </section>
+
     <div id="toast" class="toast" role="alert" hidden></div>
   </main>
 
@@ -182,6 +232,8 @@
   <script src="/games/checkers.js"></script>
   <script src="/games/minesweeper.js"></script>
   <script src="/games/chess.js"></script>
+  <script src="/games/platformer.js"></script>
+  <script src="/games/platformer-levels.js"></script>
   <script src="/games/ai.js"></script>
   <!-- Interface de cada jogo -->
   <script src="js/tictactoe.js"></script>
@@ -189,6 +241,11 @@
   <script src="js/checkers.js"></script>
   <script src="js/minesweeper.js"></script>
   <script src="js/chess.js"></script>
+  <script src="js/platformer.js"></script>
+  <!-- Dupla Tropical: gráficos, controles, som e cliente de rede -->
+  <script src="js/coop/sprites.js"></script>
+  <script src="js/coop/input.js"></script>
+  <script src="js/coop/game.js"></script>
   <!-- Controlador das telas, modos e conexão -->
   <script src="js/app.js"></script>
 </body>
